@@ -130,6 +130,9 @@
 </body>
 
 <script>
+  const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "https://casino-zzi5.onrender.com";
   let balance = parseInt(localStorage.getItem("balance")) || 1000;
   document.getElementById("balance").textContent = "Credits: " + balance;
 
@@ -166,8 +169,8 @@
 
     const min = num_dice;
     const max = num_dice * 6;
-    if (prediction < min || prediction > max) {
-        document.getElementById("message").textContent = 
+    if (isNaN(prediction) || prediction < min || prediction > max) {
+        document.getElementById("message").textContent =
             "Vorhersage muss zwischen " + min + " und " + max + " liegen!";
         return;
     }
@@ -181,7 +184,7 @@
     ).join('');
 
     setTimeout(async () => {
-      const response = await fetch("http://127.0.0.1:8000/roll", {
+      const response = await fetch(`${API_URL}/roll`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bet, balance, num_dice, prediction })
@@ -189,16 +192,16 @@
 
       const data = await response.json();
 
-      if (data.error) {
-        document.getElementById("message").textContent = data.error;
+      if (data.error || !data.numbers) {
+        document.getElementById("message").textContent = data.error || "Server-Fehler";
         return;
       }
 
       balance = data.balance;
       localStorage.setItem("balance", balance);
+      document.getElementById("balance").textContent = "Credits: " + balance;
 
       würfelDiv.innerHTML = data.numbers.map(n => createDiceFace(n)).join('');
-      document.getElementById("balance").textContent = "Credits: " + balance;
       document.getElementById("message").textContent =
         data.win > 0 ? "Gewonnen: " + data.win + " Credits! 🎉" : "Kein Gewinn 😔";
     }, 500);

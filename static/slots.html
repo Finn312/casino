@@ -64,12 +64,15 @@
     <a href="/static/index.html">← Zurück zur Lobby</a>
 
     <script>
-        let balance = parseInt(localStorage.getItem("balance")) || 1000;
+        const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+            ? "http://127.0.0.1:8000"
+            : "https://casino-zzi5.onrender.com";
+                let balance = parseInt(localStorage.getItem("balance")) || 1000;
 
         async function spin() {
             const bet = parseInt(document.getElementById("bet").value);
 
-            const response = await fetch("http://127.0.0.1:8000/spin", {
+            const response = await fetch(`${API_URL}/spin`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ bet: bet, balance: balance })

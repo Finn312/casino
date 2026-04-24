@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from slots import spin_reels, calculate_win
-from dice import calculate_win
+from slots import spin_reels, calculate_win as slots_calculate_win
+from dice import calculate_win as dice_calculate_win
 
 app = FastAPI()
 
@@ -18,7 +18,7 @@ def spin(request: SpinRequest):
         return {"error": "Not enough credits"}
     
     reels = spin_reels()
-    win = calculate_win(reels, request.bet)
+    win = slots_calculate_win(reels, request.bet)
     new_balance = request.balance - request.bet + win
     
     return {
@@ -42,7 +42,7 @@ def roll(request: RollRequest):
     if request.bet > request.balance:
         return {"error": "Not enough credits"}
     
-    win, numbers = calculate_win(request.bet,request.prediction, request.num_dice )
+    win, numbers = dice_calculate_win(request.bet, request.prediction, request.num_dice)
     new_balance = request.balance - request.bet + win
     
     return {
