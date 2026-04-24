@@ -14,21 +14,81 @@
             padding: 2rem;
         }
         h1 { color: #f0c040; }
+
         #reels {
             display: flex;
-            gap: 1rem;
-            font-size: 4rem;
+            gap: 1.2rem;
             margin: 2rem 0;
             background: #1a1a1a;
-            padding: 1rem 2rem;
+            padding: 1.5rem 2rem;
             border-radius: 12px;
             border: 2px solid #f0c040;
         }
+
+        .reel-viewport {
+            width: 100px;
+            height: 100px;
+            overflow: hidden;
+            border: 2px solid #f0c040;
+            border-radius: 8px;
+            background: #0d0d0d;
+            position: relative;
+        }
+
+        /* Top and bottom fade-out to simulate depth */
+        .reel-viewport::before,
+        .reel-viewport::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 28px;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .reel-viewport::before {
+            top: 0;
+            background: linear-gradient(to bottom, rgba(13,13,13,0.75), transparent);
+        }
+        .reel-viewport::after {
+            bottom: 0;
+            background: linear-gradient(to top, rgba(13,13,13,0.75), transparent);
+        }
+
+        .reel-viewport.win {
+            animation: win-glow 0.45s ease-in-out 6;
+        }
+
+        @keyframes win-glow {
+            0%, 100% { box-shadow: 0 0 6px rgba(240,192,64,0.4); border-color: #f0c040; }
+            50%       { box-shadow: 0 0 24px rgba(240,192,64,1), 0 0 50px rgba(240,192,64,0.55); border-color: #ffe680; }
+        }
+
+        .reel-strip {
+            display: flex;
+            flex-direction: column;
+            will-change: transform;
+            transform: translateY(0);
+        }
+
+        .reel-cell {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            flex-shrink: 0;
+            user-select: none;
+            line-height: 1;
+        }
+
         #balance, #message {
             font-size: 1.2rem;
             margin: 0.5rem 0;
         }
         #message { color: #f0c040; min-height: 1.5rem; }
+
         select, button {
             font-size: 1rem;
             padding: 0.5rem 1rem;
@@ -42,14 +102,20 @@
             color: #0a0a0a;
             font-weight: bold;
         }
-        button:hover { background: #d4a820; }
+        button:hover:not(:disabled) { background: #d4a820; }
+        button:disabled { background: #555; color: #888; cursor: not-allowed; }
+
         a { color: #f0c040; margin-top: 2rem; }
     </style>
 </head>
 <body>
     <h1>🎰 Slot Machine</h1>
     <div id="balance">Credits: 1000</div>
-    <div id="reels">🎰 🎰 🎰</div>
+    <div id="reels">
+        <div class="reel-viewport" id="reel-0"><div class="reel-strip" id="strip-0"></div></div>
+        <div class="reel-viewport" id="reel-1"><div class="reel-strip" id="strip-1"></div></div>
+        <div class="reel-viewport" id="reel-2"><div class="reel-strip" id="strip-2"></div></div>
+    </div>
     <div id="message"></div>
     <div>
         <label>Einsatz:</label>
@@ -59,38 +125,151 @@
             <option value="50">50</option>
             <option value="100">100</option>
         </select>
-        <button onclick="spin()">Drehen!</button>
+        <button onclick="spin()" id="spinBtn">Drehen!</button>
     </div>
     <a href="/static/index.html">← Zurück zur Lobby</a>
 
     <script>
-        const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-            ? "http://127.0.0.1:8000"
-            : "https://casino-zzi5.onrender.com";
-                let balance = parseInt(localStorage.getItem("balance")) || 1000;
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://127.0.0.1:8000'
+            : 'https://casino-zzi5.onrender.com';
+
+        let balance = parseInt(localStorage.getItem('balance')) || 1000;
+
+        const SYMBOLS  = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '7️⃣'];
+        const CELL_H   = 100;  // px — must match .reel-cell height
+        const SPIN_N   = 80;   // random cells in spinning strip
+        const SPIN_S   = 4;    // seconds for linear spin CSS transition
+        const MIN_SPIN = 700;  // minimum ms before reels begin stopping
+        const STOP_DLY = [0, 350, 700]; // per-reel stagger delay (ms)
+        const STOP_BUF = 10;   // extra random cells before the final symbol
+
+        let isSpinning = false;
+
+        function rnd() { return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]; }
+
+        function makeCell(sym) {
+            const d = document.createElement('div');
+            d.className = 'reel-cell';
+            d.textContent = sym;
+            return d;
+        }
+
+        // Read computed translateY mid-animation
+        function getY(el) {
+            const m = window.getComputedStyle(el).transform;
+            return m === 'none' ? 0 : new DOMMatrix(m).m42;
+        }
+
+        // Build strip and begin fast linear scroll with blur
+        function startReel(strip) {
+            strip.innerHTML = '';
+            for (let i = 0; i < SPIN_N; i++) strip.appendChild(makeCell(rnd()));
+
+            strip.style.transition = 'none';
+            strip.style.filter     = 'none';
+            strip.style.transform  = 'translateY(0)';
+            strip.getBoundingClientRect(); // flush
+
+            strip.style.filter     = 'blur(6px)';
+            strip.style.transition = `transform ${SPIN_S}s linear`;
+            strip.style.transform  = `translateY(-${(SPIN_N - 1) * CELL_H}px)`;
+        }
+
+        // Freeze mid-animation, append buffer + final symbol, ease-out to final position
+        function stopReel(strip, symbol) {
+            const curY = getY(strip);
+            strip.style.transition = 'none';
+            strip.style.transform  = `translateY(${curY}px)`;
+            strip.getBoundingClientRect(); // flush
+
+            for (let i = 0; i < STOP_BUF; i++) strip.appendChild(makeCell(rnd()));
+            strip.appendChild(makeCell(symbol));
+
+            const targetY = -((strip.children.length - 1) * CELL_H);
+            strip.style.transition = 'transform 0.9s ease-out, filter 0.5s ease';
+            strip.style.transform  = `translateY(${targetY}px)`;
+            strip.style.filter     = 'none';
+        }
+
+        // Show idle state on page load
+        (function init() {
+            for (let i = 0; i < 3; i++) {
+                const s = document.getElementById(`strip-${i}`);
+                s.style.cssText = 'transition:none;filter:none;transform:translateY(0)';
+                s.innerHTML = '';
+                s.appendChild(makeCell('🎰'));
+            }
+            document.getElementById('balance').textContent = 'Credits: ' + balance;
+        })();
 
         async function spin() {
-            const bet = parseInt(document.getElementById("bet").value);
+            if (isSpinning) return;
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            document.getElementById('message').textContent = '';
+
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`reel-${i}`).classList.remove('win');
+                startReel(document.getElementById(`strip-${i}`));
+            }
+
+            const t0  = Date.now();
+            const bet = parseInt(document.getElementById('bet').value);
 
             const response = await fetch(`${API_URL}/spin`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ bet: bet, balance: balance })
             });
 
             const data = await response.json();
 
             if (data.error) {
-                document.getElementById("message").textContent = data.error;
+                for (let i = 0; i < 3; i++) {
+                    const s = document.getElementById(`strip-${i}`);
+                    const y = getY(s);
+                    s.style.transition = 'none';
+                    s.style.transform  = `translateY(${y}px)`;
+                    s.style.filter     = 'none';
+                }
+                document.getElementById('message').textContent = data.error;
+                isSpinning = false;
+                document.getElementById('spinBtn').disabled = false;
                 return;
             }
 
-            balance = data.balance;
-            localStorage.setItem("balance", balance);
-            document.getElementById("reels").textContent = data.reels.join(" ");
-            document.getElementById("balance").textContent = "Credits: " + balance;
-            document.getElementById("message").textContent = 
-                data.win > 0 ? "Gewonnen: " + data.win + " Credits! 🎉" : "Kein Gewinn 😔";
+            // Honour minimum spin time so animation always looks deliberate
+            const wait = Math.max(0, MIN_SPIN - (Date.now() - t0));
+
+            setTimeout(() => {
+                data.reels.forEach((sym, i) => {
+                    setTimeout(() => {
+                        stopReel(document.getElementById(`strip-${i}`), sym);
+
+                        if (i === 2) {
+                            // 950ms > 900ms stop transition — wait for it to finish
+                            setTimeout(() => {
+                                balance = data.balance;
+                                localStorage.setItem('balance', balance);
+                                document.getElementById('balance').textContent = 'Credits: ' + balance;
+                                document.getElementById('message').textContent =
+                                    data.win > 0
+                                        ? `Gewonnen: ${data.win} Credits! 🎉`
+                                        : 'Kein Gewinn 😔';
+
+                                if (data.win > 0) {
+                                    for (let j = 0; j < 3; j++)
+                                        document.getElementById(`reel-${j}`).classList.add('win');
+                                }
+
+                                isSpinning = false;
+                                document.getElementById('spinBtn').disabled = false;
+                            }, 950);
+                        }
+                    }, STOP_DLY[i]);
+                });
+            }, wait);
         }
     </script>
 </body>
