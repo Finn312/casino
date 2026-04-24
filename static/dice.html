@@ -133,7 +133,8 @@
   const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
     ? "http://127.0.0.1:8000"
     : "https://casino-zzi5.onrender.com";
-  let balance = parseInt(localStorage.getItem("balance")) || 1000;
+  const _stored = localStorage.getItem("balance");
+  let balance = (_stored !== null && !isNaN(parseInt(_stored))) ? parseInt(_stored) : 1000;
   document.getElementById("balance").textContent = "Credits: " + balance;
 
   // 9-cell grid (3×3): 1 = dot, 0 = empty
@@ -203,7 +204,7 @@
 
       würfelDiv.innerHTML = data.numbers.map(n => createDiceFace(n)).join('');
       document.getElementById("message").textContent =
-        data.win > 0 ? "Gewonnen: " + data.win + " Credits! 🎉" : "Kein Gewinn 😔";
+        data.win > 0 ? "+" + (data.win - bet) + " Credits! 🎉" : "Kein Gewinn 😔";
     }, 500);
   }
 </script>
