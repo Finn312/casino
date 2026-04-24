@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Slot Machine</title>
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+        h1 { color: #f0c040; }
+        #reels {
+            display: flex;
+            gap: 1rem;
+            font-size: 4rem;
+            margin: 2rem 0;
+            background: #1a1a1a;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            border: 2px solid #f0c040;
+        }
+        #balance, #message {
+            font-size: 1.2rem;
+            margin: 0.5rem 0;
+        }
+        #message { color: #f0c040; min-height: 1.5rem; }
+        select, button {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+        button {
+            background: #f0c040;
+            color: #0a0a0a;
+            font-weight: bold;
+        }
+        button:hover { background: #d4a820; }
+        a { color: #f0c040; margin-top: 2rem; }
+    </style>
+</head>
+<body>
+    <h1>🎰 Slot Machine</h1>
+    <div id="balance">Credits: 1000</div>
+    <div id="reels">🎰 🎰 🎰</div>
+    <div id="message"></div>
+    <div>
+        <label>Einsatz:</label>
+        <select id="bet">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+        <button onclick="spin()">Drehen!</button>
+    </div>
+    <a href="/static/index.html">← Zurück zur Lobby</a>
+
+    <script>
+        let balance = parseInt(localStorage.getItem("balance")) || 1000;
+
+        async function spin() {
+            const bet = parseInt(document.getElementById("bet").value);
+
+            const response = await fetch("http://127.0.0.1:8000/spin", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ bet: bet, balance: balance })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                document.getElementById("message").textContent = data.error;
+                return;
+            }
+
+            balance = data.balance;
+            localStorage.setItem("balance", balance);
+            document.getElementById("reels").textContent = data.reels.join(" ");
+            document.getElementById("balance").textContent = "Credits: " + balance;
+            document.getElementById("message").textContent = 
+                data.win > 0 ? "Gewonnen: " + data.win + " Credits! 🎉" : "Kein Gewinn 😔";
+        }
+    </script>
+</body>
+</html>

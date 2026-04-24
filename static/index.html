@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyCasino</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header>
+    <a class="logo" href="#">🃏 My<span>Casino</span></a>
+
+    <nav>
+      <a href="#games">Games</a>
+      <a href="#">Leaderboard</a>
+      <a href="#">Settings</a>
+    </nav>
+
+    <div class="wallet">
+      <span class="wallet-icon">💰</span>
+      <span class="wallet-label">Credits</span>
+      <span class="wallet-amount" id="balance">1,000</span>
+    </div>
+  </header>
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <p class="hero-eyebrow">Welcome to</p>
+    <h1>Buzz<br /><em>Casino</em></h1>
+    <p>Pick a game and test your luck. All credits are virtual — the fun is real.</p>
+  </section>
+
+  <!-- ── Game Grid ── -->
+  <main class="games" id="games">
+    <div class="section-header">
+      <h2>Games</h2>
+      <span>5 available</span>
+    </div>
+
+    <div class="games-grid" id="games-grid"></div>
+  </main>
+
+  <!-- ── Toast ── -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div class="footer-logo">🃏 My<span>Casino</span></div>
+    <span class="footer-note">Personal project &mdash; fake credits only, no real money</span>
+    <div class="footer-links">
+      <a href="#">About</a>
+      <a href="#">GitHub</a>
+    </div>
+  </footer>
+
+  <script>
+    const GAMES = [
+      {
+        icon: '🃏',
+        name: 'Blackjack',
+        desc: 'Beat the dealer to 21 without going bust.',
+        tag: 'Card game',
+      },
+      {
+        icon: '🎡',
+        name: 'Roulette',
+        desc: 'Place your bets and spin the wheel.',
+        tag: 'Table game',
+      },
+      {
+        icon: '🎰',
+        name: 'Slot Machine',
+        desc: 'Line up the symbols and hit the jackpot.',
+        tag: 'Slots',
+      },
+      {
+        icon: '🎲',
+        name: 'Dice',
+        desc: 'Roll the dice and bet on the outcome.',
+        tag: 'Dice game',
+      },
+      {
+        icon: '🂡',
+        name: 'Poker',
+        desc: "Build the best hand and outwit the table.",
+        tag: 'Card game',
+      },
+    ];
+
+    // Render game cards
+    const savedBalance = localStorage.getItem("balance") || 1000;
+    document.getElementById("balance").textContent = parseInt(savedBalance).toLocaleString("de-DE")
+    const grid = document.getElementById('games-grid');
+
+    GAMES.forEach(game => {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.innerHTML = `
+        <span class="card-icon">${game.icon}</span>
+        <div class="card-name">${game.name}</div>
+        <div class="card-desc">${game.desc}</div>
+        <span class="card-tag">${game.tag}</span>
+        <button class="btn-play" data-game="${game.name}">Play</button>
+      `;
+      grid.appendChild(card);
+    });
+
+    // Toast helper
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // Play button handler
+    document.getElementById('games-grid').addEventListener('click', e => {
+      const btn = e.target.closest('.btn-play');
+      if (!btn) return;
+
+      if (btn.dataset.game == "Slot Machine") {
+        window.location.href = "/static/slots.html"
+        return;
+      }
+      showToast(`${btn.dataset.game} — Coming soon!`);
+    });
+  </script>
+</body>
+</html>
