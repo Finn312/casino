@@ -126,6 +126,11 @@
         window.location.href = "/static/slots.html"
         return;
       }
+
+      if (btn.dataset.game == "Dice") {
+        window.location.href = "/static/dice.html"
+        return;
+      }
       showToast(`${btn.dataset.game} — Coming soon!`);
     });
   </script>

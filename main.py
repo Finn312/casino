@@ -34,7 +34,7 @@ class RollRequest(BaseModel):
     bet: int
     balance: int
     prediction: int
-    number_dice: int = 2
+    num_dice: int = 2
     
     
 @app.post("/roll")
@@ -42,7 +42,7 @@ def roll(request: RollRequest):
     if request.bet > request.balance:
         return {"error": "Not enough credits"}
     
-    win, numbers = calculate_win(request.bet,request.prediction, request.number_dice )
+    win, numbers = calculate_win(request.bet,request.prediction, request.num_dice )
     new_balance = request.balance - request.bet + win
     
     return {
