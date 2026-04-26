@@ -131,6 +131,11 @@
         window.location.href = "/static/dice.html"
         return;
       }
+
+      if (btn.dataset.game == "Blackjack") {
+        window.location.href = "/static/blackjack.html"
+        return;
+      }
       showToast(`${btn.dataset.game} — Coming soon!`);
     });
   </script>
