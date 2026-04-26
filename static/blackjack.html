@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>BlackJack</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0a;
+      color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem 2rem;
+    }
+
+    h1 {
+      color: #f0c040;
+      font-size: 1.8rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    #balance {
+      font-size: 1.15rem;
+      margin-bottom: 1.2rem;
+      transition: color 0.4s;
+    }
+    #balance.winning { color: #4caf50; }
+    #balance.losing  { color: #f44336; }
+
+    /* ── TABLE ── */
+    .table {
+      width: 100%;
+      max-width: 680px;
+      background: radial-gradient(ellipse at 50% 35%, #1e5c32 0%, #143d22 65%, #0d2b18 100%);
+      border-radius: 22px;
+      border: 3px solid #f0c040;
+      box-shadow:
+        0 0 0 6px rgba(240,192,64,0.08),
+        0 24px 64px rgba(0,0,0,0.85);
+      padding: 1.8rem 2rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* felt diamond weave */
+    .table::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient( 45deg, transparent 0, transparent 9px, rgba(0,0,0,0.045) 9px, rgba(0,0,0,0.045) 10px),
+        repeating-linear-gradient(-45deg, transparent 0, transparent 9px, rgba(0,0,0,0.045) 9px, rgba(0,0,0,0.045) 10px);
+      pointer-events: none;
+    }
+
+    /* inner ring */
+    .table::after {
+      content: '';
+      position: absolute;
+      inset: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+      pointer-events: none;
+    }
+
+    .hand-area { position: relative; z-index: 1; }
+
+    .area-label {
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(240,192,64,0.65);
+      margin-bottom: 0.5rem;
+    }
+
+    .cards-row {
+      display: flex;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      min-height: 108px;
+      align-items: flex-start;
+    }
+
+    .hand-value {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 0.4rem;
+      min-height: 1.1rem;
+    }
+
+    /* ── FELT CENTER ── */
+    .felt-center {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0.9rem 0;
+      min-height: 60px;
+    }
+
+    .result-msg {
+      font-size: 2rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-align: center;
+      opacity: 0;
+      transform: scale(0.6) translateY(8px);
+      transition: opacity 0.35s ease, transform 0.4s cubic-bezier(0.17, 0.67, 0.12, 1.6);
+      pointer-events: none;
+    }
+    .result-msg.show {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    .result-msg.win  { color: #4caf50; text-shadow: 0 0 24px rgba(76,175,80,0.7); }
+    .result-msg.lose { color: #f44336; text-shadow: 0 0 24px rgba(244,67,54,0.5); }
+    .result-msg.push { color: #f0c040; text-shadow: 0 0 24px rgba(240,192,64,0.5); }
+    .result-msg.bust { color: #ff5722; text-shadow: 0 0 24px rgba(255,87,34,0.6); }
+
+    /* ── CARDS ── */
+    @keyframes dealCard {
+      from { opacity: 0; transform: translateY(-50px) rotate(-8deg) scale(0.75); }
+      to   { opacity: 1; transform: translateY(0)     rotate(0deg)  scale(1); }
+    }
+
+    .card {
+      width: 68px;
+      height: 98px;
+      background: #fafaf5;
+      border-radius: 8px;
+      box-shadow: 2px 5px 14px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,0,0,0.12);
+      position: relative;
+      flex-shrink: 0;
+      animation: dealCard 0.38s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      overflow: hidden;
+    }
+
+    .card.red   { color: #cc1c1c; }
+    .card.black { color: #111; }
+
+    .card-corner {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.1;
+    }
+    .card-corner.tl { top: 4px; left: 5px; }
+    .card-corner.br { bottom: 4px; right: 5px; transform: rotate(180deg); }
+
+    .card-rank { font-size: 0.9rem; font-weight: 800; }
+    .card-suit-sm { font-size: 0.65rem; }
+
+    .card-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.9rem;
+      opacity: 0.12;
+      user-select: none;
+    }
+
+    /* face-down card */
+    .card-back { background: #1a3d8f; }
+    .card-back-inner {
+      position: absolute;
+      inset: 5px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background:
+        repeating-linear-gradient(
+          45deg,
+          rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 3px,
+          transparent 3px, transparent 7px
+        );
+    }
+    .card-back-emblem {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.6rem;
+      opacity: 0.3;
+      color: #fff;
+    }
+
+    /* ── CONTROLS ── */
+    .controls {
+      margin-top: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+      width: 100%;
+      max-width: 680px;
+    }
+
+    #action-btns {
+      display: none;
+      gap: 1rem;
+    }
+
+    #start-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      font-size: 1rem;
+      padding: 0.6rem 2rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    button:active { transform: scale(0.95); }
+
+    #hit_botton {
+      background: #2e7d32;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(46,125,50,0.45);
+    }
+    #hit_botton:hover { background: #388e3c; box-shadow: 0 4px 20px rgba(46,125,50,0.65); }
+
+    #stand_button {
+      background: #b71c1c;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(183,28,28,0.45);
+    }
+    #stand_button:hover { background: #c62828; box-shadow: 0 4px 20px rgba(183,28,28,0.65); }
+
+    .btn-start {
+      background: #f0c040;
+      color: #0a0a0a;
+      box-shadow: 0 4px 14px rgba(240,192,64,0.35);
+    }
+    .btn-start:hover { background: #d4a820; box-shadow: 0 4px 20px rgba(240,192,64,0.55); }
+
+    select {
+      font-size: 1rem;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: #1e1e1e;
+      color: #f0f0f0;
+    }
+
+    label { color: #999; font-size: 0.95rem; }
+
+    .back-link {
+      color: #f0c040;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    #game { display: none; }
+    #hit_botton, #stand_button { display: none; }
+  </style>
+</head>
+<body>
+
+  <h1>♠ BlackJack ♦</h1>
+  <div id="balance">Credits: 1000</div>
+
+  <div class="table">
+
+    <div class="hand-area">
+      <div class="area-label">Dealer</div>
+      <div id="dealer-cards" class="cards-row"></div>
+      <div id="dealer-value" class="hand-value"></div>
+    </div>
+
+    <div class="felt-center">
+      <div id="result-msg" class="result-msg"></div>
+    </div>
+
+    <div class="hand-area">
+      <div id="player-value" class="hand-value"></div>
+      <div id="player-cards" class="cards-row"></div>
+      <div class="area-label" style="margin-top:0.5rem">Spieler</div>
+    </div>
+
+  </div>
+
+  <div class="controls">
+    <div id="action-btns">
+      <button id="hit_botton"   onclick="hit()">Hit</button>
+      <button id="stand_button" onclick="stand()">Stand</button>
+    </div>
+    <div id="start-ctrl">
+      <label>Einsatz:</label>
+      <select id="bet">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <button id="start-btn" class="btn-start" onclick="startGame()">Spiel Starten</button>
+    </div>
+  </div>
+
+  <div id="game"></div>
+  <a class="back-link" href="/static/index.html">← Zurück zur Lobby</a>
+
+<script>
+  const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "https://casino-zzi5.onrender.com";
+
+  const _stored = localStorage.getItem("balance");
+  let balance = (_stored !== null && !isNaN(parseInt(_stored))) ? parseInt(_stored) : 1000;
+  let game_state = false;
+  document.getElementById("balance").textContent = "Credits: " + balance;
+
+  // ── card rendering ──────────────────────────────────────────
+
+  function parseCard(str) {
+    for (const s of ['♥','♦','♠','♣']) {
+      if (str.includes(s)) return { rank: str.replace(s, ''), suit: s, red: s==='♥'||s==='♦' };
+    }
+    return { rank: str, suit: '', red: false };
+  }
+
+  function cardHTML(cardStr, delay = 0) {
+    const { rank, suit, red } = parseCard(cardStr);
+    return `<div class="card ${red ? 'red' : 'black'}" style="animation-delay:${delay}ms">
+      <div class="card-corner tl"><span class="card-rank">${rank}</span><span class="card-suit-sm">${suit}</span></div>
+      <div class="card-center">${suit}</div>
+      <div class="card-corner br"><span class="card-rank">${rank}</span><span class="card-suit-sm">${suit}</span></div>
+    </div>`;
+  }
+
+  function hiddenCardHTML(delay = 0) {
+    return `<div class="card card-back" style="animation-delay:${delay}ms">
+      <div class="card-back-inner"></div>
+      <div class="card-back-emblem">✦</div>
+    </div>`;
+  }
+
+  // ── ui helpers ───────────────────────────────────────────────
+
+  function showResult(text, type) {
+    const el = document.getElementById("result-msg");
+    el.className = "result-msg " + type;
+    el.textContent = text;
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("show")));
+  }
+
+  function clearResult() {
+    const el = document.getElementById("result-msg");
+    el.className = "result-msg";
+    el.textContent = "";
+  }
+
+  function setPhase(phase) {
+    // phase: "start" | "playing" | "over"
+    const actionBtns  = document.getElementById("action-btns");
+    const startCtrl   = document.getElementById("start-ctrl");
+    const hitBtn      = document.getElementById("hit_botton");
+    const standBtn    = document.getElementById("stand_button");
+    const startBtn    = document.getElementById("start-btn");
+
+    if (phase === "playing") {
+      actionBtns.style.display  = "flex";
+      startCtrl.style.display   = "none";
+      hitBtn.style.display      = "inline-block";
+      standBtn.style.display    = "inline-block";
+    } else {
+      actionBtns.style.display  = "none";
+      startCtrl.style.display   = "flex";
+      hitBtn.style.display      = "none";
+      standBtn.style.display    = "none";
+      startBtn.textContent      = phase === "over" ? "Neues Spiel" : "Spiel Starten";
+    }
+  }
+
+  function flashBalance(newBalance) {
+    const oldBalance = balance;
+    balance = newBalance;
+    localStorage.setItem("balance", balance);
+    const el = document.getElementById("balance");
+    el.textContent = "Credits: " + balance;
+    el.className = balance > oldBalance ? "winning" : balance < oldBalance ? "losing" : "";
+    setTimeout(() => { el.className = ""; }, 900);
+  }
+
+  // ── game functions (API calls identical to original) ─────────
+
+  async function startGame() {
+    const bet = parseInt(document.getElementById("bet").value);
+    const response = await fetch(`${API_URL}/blackjack/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bet: bet, balance: balance })
+    });
+    const data = await response.json();
+    if (response.ok) {
+      game_state = true;
+      clearResult();
+
+      document.getElementById("player-cards").innerHTML =
+        data.player_hand.map((c, i) => cardHTML(c, i * 140)).join("");
+      document.getElementById("player-value").textContent = "Wert: " + data.player_value;
+
+      document.getElementById("dealer-cards").innerHTML =
+        cardHTML(data.dealer_card, 0) + hiddenCardHTML(140);
+      document.getElementById("dealer-value").textContent = "Wert: ?";
+
+      document.getElementById("game").textContent =
+        `Player Hand: ${data.player_hand.join(", ")} (Value: ${data.player_value}) | Dealer: ${data.dealer_card}, ?`;
+
+      // Blackjack with first 2 cards → auto-stand, no Hit/Stand shown
+      if (data.player_value === 21 || data.result === "blackjack") {
+        setTimeout(stand, 900);
+      } else {
+        setPhase("playing");
+      }
+    } else {
+      showResult(data.error || "Fehler", "lose");
+    }
+  }
+
+  async function hit() {
+    if (!game_state) return;
+    const response = await fetch(`${API_URL}/blackjack/hit`, {
+      method: "POST"
+    });
+    const data = await response.json();
+    if (response.ok) {
+      // only append the newest card so existing ones don't re-animate
+      const newCard = data.player_hand[data.player_hand.length - 1];
+      document.getElementById("player-cards").insertAdjacentHTML("beforeend", cardHTML(newCard, 0));
+      document.getElementById("player-value").textContent = "Wert: " + data.player_value;
+
+      document.getElementById("game").textContent =
+        `Player Hand: ${data.player_hand.join(", ")} (Value: ${data.player_value}) | Dealer: ?`;
+
+      if (data.result === "bust") {
+        game_state = false;
+        setPhase("over");
+        showResult("Bust! 💥", "bust");
+      } else if (data.result === "blackjack") {
+        game_state = false;
+        setPhase("over");
+        showResult("Blackjack! 🎉", "win");
+      }
+    } else {
+      showResult(data.error || "Fehler", "lose");
+    }
+  }
+
+  async function stand() {
+    if (!game_state) return;
+    const response = await fetch(`${API_URL}/blackjack/stand`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ balance: balance })
+    });
+    const data = await response.json();
+    if (response.ok) {
+      // reveal dealer hand with stagger
+      document.getElementById("dealer-cards").innerHTML =
+        data.dealer_hand.map((c, i) => cardHTML(c, i * 140)).join("");
+      document.getElementById("dealer-value").textContent = "Wert: " + data.dealer_value;
+      document.getElementById("player-value").textContent = "Wert: " + data.player_value;
+
+      document.getElementById("game").textContent =
+        `Player Hand: ${data.player_hand.join(", ")} (Value: ${data.player_value}) | Dealer Hand: ${data.dealer_hand.join(", ")} (Value: ${data.dealer_value})`;
+
+      flashBalance(data.balance);
+      game_state = false;
+      setPhase("over");
+
+      // parse result string and show message
+      const g = (data.gewinner || "").toLowerCase();
+      let msg = data.gewinner, type = "push";
+      if (g.includes("spieler") || g.includes("player") || g.includes("win") || g.includes("gewinn")) {
+        type = "win";
+      } else if (g.includes("dealer") || g.includes("verlier") || g.includes("bust")) {
+        type = "lose";
+      }
+      setTimeout(() => showResult(msg, type), 500);
+    } else {
+      showResult(data.error || "Fehler", "lose");
+    }
+  }
+</script>
+</body>
+</html>
