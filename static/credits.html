@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credits — MyCasino</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #f0f0f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2.5rem 1.5rem;
+    }
+
+    h1 {
+      color: #f0c040;
+      font-size: 1.7rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .page-sub {
+      color: #666;
+      font-size: 0.85rem;
+      margin-bottom: 0.8rem;
+      letter-spacing: 0.05em;
+    }
+
+    #balance-display {
+      font-size: 1rem;
+      color: #aaa;
+      margin-bottom: 2.5rem;
+    }
+    #balance-display span {
+      color: #f0c040;
+      font-weight: 700;
+    }
+
+    /* ── Cards grid ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 780px;
+      margin-bottom: 2.5rem;
+    }
+
+    .reward-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 2rem 1.5rem 1.6rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .reward-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(ellipse at 50% 0%, var(--glow) 0%, transparent 70%);
+      opacity: 0.07;
+      pointer-events: none;
+    }
+
+    .reward-card:not(.collected):hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 28px rgba(0,0,0,0.6), 0 0 0 1px var(--accent);
+    }
+
+    .card-daily  { --accent: #f0c040; --glow: #f0c040; }
+    .card-weekly { --accent: #c084fc; --glow: #c084fc; }
+    .card-lucky  { --accent: #4ade80; --glow: #4ade80; }
+
+    .card-icon {
+      font-size: 2.4rem;
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .card-amount {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.01em;
+      min-height: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-amount.animate {
+      animation: popIn 0.45s cubic-bezier(0.17, 0.67, 0.12, 1.6) both;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.5); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .card-freq {
+      font-size: 0.72rem;
+      color: #555;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-timer {
+      font-size: 0.75rem;
+      color: #555;
+      min-height: 1rem;
+    }
+    .card-timer.available { color: #4ade80; }
+
+    /* ── Collect button ── */
+    .btn-collect {
+      margin-top: 0.75rem;
+      width: 100%;
+      padding: 0.65rem;
+      border-radius: 9px;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.18s, opacity 0.18s, transform 0.1s;
+      background: var(--accent);
+      color: #0a0a0a;
+    }
+
+    .btn-collect:hover:not(:disabled) {
+      filter: brightness(1.12);
+    }
+
+    .btn-collect:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .btn-collect:disabled {
+      background: #1e1e1e;
+      color: #444;
+      cursor: not-allowed;
+    }
+
+    /* collected state */
+    .reward-card.collected {
+      border-color: #1e1e1e;
+      opacity: 0.65;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: #1a1a1a;
+      border: 1px solid #f0c040;
+      color: #f0f0f0;
+      padding: 0.7rem 1.5rem;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.22s, transform 0.22s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 99;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    a.back {
+      color: #f0c040;
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+    a.back:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <h1>🎁 Gratis Credits</h1>
+  <div class="page-sub">Täglich und wöchentlich gratis einsammeln</div>
+  <div id="balance-display">Guthaben: <span id="bal">–</span> Credits</div>
+
+  <div class="cards">
+
+    <div class="reward-card card-daily" id="card-daily">
+      <div class="card-icon">🌅</div>
+      <div class="card-title">Täglicher Bonus</div>
+      <div class="card-amount" id="amt-daily">+100</div>
+      <div class="card-freq">Einmal pro Tag</div>
+      <div class="card-timer" id="timer-daily"></div>
+      <button class="btn-collect" id="btn-daily" onclick="collect('daily')">Einsammeln</button>
+    </div>
+
+    <div class="reward-card card-weekly" id="card-weekly">
+      <div class="card-icon">🏆</div>
+      <div class="card-title">Wöchentlicher Bonus</div>
+      <div class="card-amount" id="amt-weekly">+500</div>
+      <div class="card-freq">Einmal pro Woche</div>
+      <div class="card-timer" id="timer-weekly"></div>
+      <button class="btn-collect" id="btn-weekly" onclick="collect('weekly')">Einsammeln</button>
+    </div>
+
+    <div class="reward-card card-lucky" id="card-lucky">
+      <div class="card-icon">🎰</div>
+      <div class="card-title">Lucky Spin</div>
+      <div class="card-amount" id="amt-lucky">+50–200</div>
+      <div class="card-freq">Einmal pro Tag</div>
+      <div class="card-timer" id="timer-lucky"></div>
+      <button class="btn-collect" id="btn-lucky" onclick="collect('lucky')">Einsammeln</button>
+    </div>
+
+  </div>
+
+  <a class="back" href="/static/index.html">← Zurück zur Lobby</a>
+  <div class="toast" id="toast"></div>
+
+<script>
+  const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "https://casino-zzi5.onrender.com";
+
+  const _stored = localStorage.getItem("balance");
+  let balance = (_stored !== null && !isNaN(parseInt(_stored))) ? parseInt(_stored) : 1000;
+
+  const REWARDS = {
+    daily:  { key: 'lastDaily',  cooldown: 24 * 60 * 60 * 1000, amount: 100 },
+    weekly: { key: 'lastWeekly', cooldown: 7 * 24 * 60 * 60 * 1000, amount: 500 },
+    lucky:  { key: 'lastLucky',  cooldown: 24 * 60 * 60 * 1000, amount: null },
+  };
+
+  function updateBalanceDisplay() {
+    document.getElementById("bal").textContent = balance.toLocaleString("de-DE");
+  }
+
+  function canCollect(id) {
+    const last = localStorage.getItem(REWARDS[id].key);
+    if (!last) return true;
+    return Date.now() - parseInt(last) > REWARDS[id].cooldown;
+  }
+
+  function timeUntil(id) {
+    const last = localStorage.getItem(REWARDS[id].key);
+    if (!last) return 0;
+    return Math.max(0, REWARDS[id].cooldown - (Date.now() - parseInt(last)));
+  }
+
+  function formatCountdown(ms) {
+    if (ms <= 0) return "";
+    const totalSec = Math.floor(ms / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h >= 24) {
+      const d = Math.floor(h / 24);
+      return `Verfügbar in ${d} Tag${d > 1 ? 'en' : ''}`;
+    }
+    return `Verfügbar in ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function refreshCards() {
+    for (const id of ['daily', 'weekly', 'lucky']) {
+      const available = canCollect(id);
+      const card    = document.getElementById(`card-${id}`);
+      const btn     = document.getElementById(`btn-${id}`);
+      const timer   = document.getElementById(`timer-${id}`);
+
+      btn.disabled = !available;
+      card.classList.toggle('collected', !available);
+
+      if (available) {
+        btn.textContent = "Einsammeln";
+        timer.textContent = "";
+        timer.className = "card-timer available";
+        if (id === 'lucky') {
+          document.getElementById("amt-lucky").textContent = "+50–200";
+        }
+      } else {
+        btn.textContent = "Bereits eingesammelt";
+        timer.textContent = formatCountdown(timeUntil(id));
+        timer.className = "card-timer";
+      }
+    }
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
+  }
+
+  async function collect(id) {
+    if (!canCollect(id)) return;
+
+    const reward  = REWARDS[id];
+    const gained  = id === 'lucky'
+      ? Math.floor(Math.random() * 151) + 50
+      : reward.amount;
+
+    balance += gained;
+    localStorage.setItem("balance", balance);
+    localStorage.setItem(reward.key, Date.now().toString());
+
+    // animate amount for lucky spin
+    if (id === 'lucky') {
+      const el = document.getElementById("amt-lucky");
+      el.textContent = `+${gained}`;
+      el.classList.remove("animate");
+      void el.offsetWidth;
+      el.classList.add("animate");
+    }
+
+    updateBalanceDisplay();
+    showToast(`+${gained} Credits eingesammelt! 🎉`);
+    refreshCards();
+
+    // sync with server
+    try {
+      await fetch(`${API_URL}/update_balance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ balance })
+      });
+    } catch { /* silent fail — localStorage already updated */ }
+  }
+
+  // live countdown tick
+  setInterval(refreshCards, 1000);
+
+  updateBalanceDisplay();
+  refreshCards();
+</script>
+</body>
+</html>

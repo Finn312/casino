@@ -18,10 +18,15 @@
       <a href="#">Settings</a>
     </nav>
 
-    <div class="wallet">
-      <span class="wallet-icon">💰</span>
-      <span class="wallet-label">Credits</span>
-      <span class="wallet-amount" id="balance">1,000</span>
+    <span id="welcome-user" class="welcome-user"></span>
+
+    <div class="wallet-wrap">
+      <div class="wallet">
+        <span class="wallet-icon">💰</span>
+        <span class="wallet-label">Credits</span>
+        <span class="wallet-amount" id="balance">1,000</span>
+      </div>
+      <span class="btn-logout" onclick="logout()">Logout</span>
     </div>
   </header>
 
@@ -91,7 +96,18 @@
 
     // Render game cards
     const savedBalance = localStorage.getItem("balance") || 1000;
-    document.getElementById("balance").textContent = parseInt(savedBalance).toLocaleString("de-DE")
+    document.getElementById("balance").textContent = parseInt(savedBalance).toLocaleString("de-DE");
+
+    const savedUsername = localStorage.getItem("username");
+    if (savedUsername) {
+      document.getElementById("welcome-user").textContent = "Willkommen, " + savedUsername + "!";
+    }
+
+    window.logout = function() {
+      localStorage.removeItem("username");
+      localStorage.removeItem("balance");
+      window.location.href = "/static/login.html";
+    };
     const grid = document.getElementById('games-grid');
 
     GAMES.forEach(game => {
@@ -138,6 +154,22 @@
       }
       showToast(`${btn.dataset.game} — Coming soon!`);
     });
+
+
+   async function logout() {
+    const username = localStorage.getItem("username");
+    const balance = parseInt(localStorage.getItem("balance"));
+    
+    await fetch(`${API_URL}/update_balance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username, new_balance: balance })
+    });
+    
+    localStorage.removeItem("username");
+    localStorage.removeItem("balance");
+    window.location.href = "/static/login.html";
+}
   </script>
 </body>
 </html>

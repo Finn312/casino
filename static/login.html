@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — MyCasino</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0d0d0f;
+      --surface:    #17171c;
+      --surface2:   #1e1e25;
+      --border:     #2a2a32;
+      --gold:       #c9952a;
+      --gold-dim:   #a57820;
+      --gold-light: #e8b84b;
+      --text:       #e8e8ee;
+      --muted:      #7a7a8c;
+      --error:      #e05555;
+      --radius:     10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    /* ── Login card ── */
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 2.5rem 2.2rem 2rem;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,149,42,0.08);
+      animation: fadeUp 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Logo ── */
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+      text-align: center;
+      margin-bottom: 0.3rem;
+    }
+    .logo span { color: var(--text); }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ── Form ── */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 0.95rem;
+      padding: 0.7rem 1rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: var(--gold-dim);
+      box-shadow: 0 0 0 3px rgba(201,149,42,0.15);
+    }
+
+    input[type="text"]::placeholder,
+    input[type="password"]::placeholder { color: var(--muted); }
+
+    /* ── Error ── */
+    #error-msg {
+      font-size: 0.85rem;
+      color: var(--error);
+      min-height: 1.1rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    /* ── Checkbox ── */
+    .checkbox-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+      cursor: pointer;
+    }
+
+    .checkbox-wrap input[type="checkbox"] {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      accent-color: var(--gold);
+      cursor: pointer;
+    }
+
+    .checkbox-wrap span {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
+      user-select: none;
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    button {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      border: none;
+      transition: background 0.18s, color 0.18s, border-color 0.18s,
+                  transform 0.1s, box-shadow 0.18s, opacity 0.2s;
+    }
+
+    button:active:not(:disabled) { transform: scale(0.97); }
+
+    button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    #btn-login {
+      background: var(--gold);
+      color: #0d0d0f;
+      box-shadow: 0 4px 14px rgba(201,149,42,0.35);
+    }
+    #btn-login:hover:not(:disabled) {
+      background: var(--gold-light);
+      box-shadow: 0 4px 20px rgba(201,149,42,0.55);
+    }
+
+    #btn-register {
+      background: transparent;
+      color: var(--gold-light);
+      border: 1.5px solid var(--gold-dim);
+    }
+    #btn-register:hover:not(:disabled) {
+      background: var(--gold);
+      color: #0d0d0f;
+      border-color: var(--gold);
+    }
+
+    /* ── Loading spinner on button ── */
+    .loading { position: relative; color: transparent !important; }
+    .loading::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 16px; height: 16px;
+      margin: -8px 0 0 -8px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.8rem 0 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <div class="logo">🃏 My<span>Casino</span></div>
+    <div class="subtitle">Einloggen oder registrieren</div>
+
+    <div class="form-group">
+      <label for="username">Benutzername</label>
+      <input type="text" id="username" placeholder="Dein Benutzername" autocomplete="username">
+    </div>
+
+    <div class="form-group">
+      <label for="password">Passwort</label>
+      <input type="password" id="password" placeholder="Dein Passwort" autocomplete="current-password">
+    </div>
+
+    <div id="error-msg"></div>
+
+    <hr class="divider">
+
+    <div class="checkbox-wrap" onclick="document.getElementById('confirm').click()">
+      <input type="checkbox" id="confirm" onclick="event.stopPropagation()">
+      <span>Ich bestätige dass dies eine reine Spaßseite ist und kein echtes Geld involviert ist</span>
+    </div>
+
+    <div class="btn-row">
+      <button id="btn-login"    disabled onclick="login()">Login</button>
+      <button id="btn-register" disabled onclick="register()">Registrieren</button>
+    </div>
+  </div>
+
+<script>
+  const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "https://casino-zzi5.onrender.com";
+
+  const confirmBox  = document.getElementById("confirm");
+  const btnLogin    = document.getElementById("btn-login");
+  const btnRegister = document.getElementById("btn-register");
+  const errorMsg    = document.getElementById("error-msg");
+
+  confirmBox.addEventListener("change", () => {
+    btnLogin.disabled    = !confirmBox.checked;
+    btnRegister.disabled = !confirmBox.checked;
+  });
+
+  // Enter key submits login
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !btnLogin.disabled) login();
+  });
+
+  function setLoading(btn, on) {
+    if (on) btn.classList.add("loading");
+    else    btn.classList.remove("loading");
+    btn.disabled = on;
+  }
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+  }
+
+  async function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    if (!username || !password) { showError("Bitte alle Felder ausfüllen."); return; }
+
+    showError("");
+    setLoading(btnLogin, true);
+
+    try {
+      const response = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        showError(data.error || "Login fehlgeschlagen.");
+      } else {
+        localStorage.setItem("username", data.username);
+        localStorage.setItem("balance", data.balance);
+        window.location.href = "/static/index.html";
+      }
+    } catch {
+      showError("Server nicht erreichbar.");
+    } finally {
+      setLoading(btnLogin, false);
+      btnLogin.disabled = false;
+    }
+  }
+
+  async function register() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    if (!username || !password) { showError("Bitte alle Felder ausfüllen."); return; }
+    if (password.length < 4)    { showError("Passwort muss mindestens 4 Zeichen haben."); return; }
+
+    showError("");
+    setLoading(btnRegister, true);
+
+    try {
+      const response = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        showError(data.error || "Registrierung fehlgeschlagen.");
+      } else {
+        localStorage.setItem("username", data.username);
+        localStorage.setItem("balance", data.balance);
+        window.location.href = "/static/index.html";
+      }
+    } catch {
+      showError("Server nicht erreichbar.");
+    } finally {
+      setLoading(btnRegister, false);
+      btnRegister.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,12 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from slots import spin_reels, calculate_win as slots_calculate_win
 from dice import calculate_win as dice_calculate_win
 from fastapi.middleware.cors import CORSMiddleware
 from blackjack import shuffle_deck, hand_value, dealer_draw, check_winner
+from database.database import engine, Base, get_db
+from database import models
+from database.models import User
 
 app = FastAPI()
+
+Base.metadata.create_all(bind=engine)
 
 game_state = {
     "deck": [],
@@ -147,3 +152,52 @@ def blackjack_stand(request: BlackJackStandRequest):
         "gewinner": gewinner,
         "balance": new_balance
     }
+    
+    
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+    
+    
+@app.post("/register")
+def register(request: LoginRequest, db = Depends(get_db)):
+    existing_user = db.query(User).filter(User.username == request.username).first()
+    if existing_user:
+        return {"error": "Es gitb diesen Namen bereits"}
+    else:
+        new_user = User(username= request.username, password= request.password)
+        db.add(new_user)
+        db.commit()
+        return {"message": "Erfolgreich registriert"}
+    
+
+@app.post("/login")
+def login(request: LoginRequest, db = Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    if user.password != request.password:
+        return {"error": "Falsches Passwort"}
+    
+    return {
+    "message": "Erfolgreich eingeloggt",
+    "username": user.username,
+    "balance": user.balance
+}
+    
+    
+class UpdateBalanceRequest(BaseModel):
+    username: str
+    new_balance: int
+    
+@app.post("/update_balance")
+def update_balance(request: UpdateBalanceRequest, db = Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    
+    user.balance = request.new_balance
+    db.commit()
+    
+    return {"message": "Balance aktualisiert", "new_balance": user.balance}
+    
