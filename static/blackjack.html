@@ -481,6 +481,15 @@
         `Player Hand: ${data.player_hand.join(", ")} (Value: ${data.player_value}) | Dealer Hand: ${data.dealer_hand.join(", ")} (Value: ${data.dealer_value})`;
 
       flashBalance(data.balance);
+      const username = localStorage.getItem("username");
+      if (username) {
+          await fetch(`${API_URL}/update_balance`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username: username, new_balance: data.balance })
+          });
+      }
+      
       game_state = false;
       setPhase("over");
 

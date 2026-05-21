@@ -260,6 +260,15 @@
             localStorage.setItem("balance", balance);
             document.getElementById("balance").textContent = "Credits: " + balance;
 
+            const username = localStorage.getItem("username");
+            if (username) {
+                await fetch(`${API_URL}/update_balance`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: username, new_balance: balance })
+                });
+            }
+
             if (data.win > 0) {
                 const net = data.win - bet;
                 document.getElementById("message").textContent = "+" + net + " Credits! 🎉";

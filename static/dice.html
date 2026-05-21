@@ -201,6 +201,14 @@
       balance = data.balance;
       localStorage.setItem("balance", balance);
       document.getElementById("balance").textContent = "Credits: " + balance;
+      const username = localStorage.getItem("username");
+      if (username) {
+          await fetch(`${API_URL}/update_balance`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username: username, new_balance: balance })
+          });
+      }
 
       würfelDiv.innerHTML = data.numbers.map(n => createDiceFace(n)).join('');
       document.getElementById("message").textContent =
