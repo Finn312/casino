@@ -4,31 +4,79 @@
     <meta charset="UTF-8">
     <title>Slot Machine</title>
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background: #0a0a0a;
+            background-color: #0a0a0a;
+            background-image:
+                radial-gradient(ellipse at 50% 38%, rgba(0, 22, 0, 0.6) 0%, transparent 58%),
+                url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%22100%22%3E%3Ctext%20x%3D%228%22%20y%3D%2244%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A0%3C%2Ftext%3E%3Ctext%20x%3D%2258%22%20y%3D%2244%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A5%3C%2Ftext%3E%3Ctext%20x%3D%228%22%20y%3D%2292%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A6%3C%2Ftext%3E%3Ctext%20x%3D%2258%22%20y%3D%2292%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A3%3C%2Ftext%3E%3C%2Fsvg%3E");
+            background-size: 100% 100%, 100px 100px;
+            background-attachment: fixed;
+            background-repeat: no-repeat, repeat;
             color: #f0f0f0;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 2rem;
+            padding: 2rem 1rem;
         }
-        h1 { color: #f0c040; }
+
+        .slots-wrapper {
+            width: 100%;
+            max-width: 520px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(13, 13, 13, 0.88);
+            border: 1px solid #232323;
+            border-radius: 22px;
+            padding: 2rem 2.5rem 2.5rem;
+            box-shadow: 0 0 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(240,192,64,0.07);
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-link {
+            align-self: flex-start;
+            color: #555;
+            font-size: 0.82rem;
+            text-decoration: none;
+            margin-bottom: 1.25rem;
+            transition: color 0.15s;
+        }
+        .back-link:hover { color: #f0c040; }
+
+        h1 {
+            color: #f0c040;
+            font-size: 1.8rem;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.02em;
+        }
+
+        #balance {
+            font-size: 1.05rem;
+            color: #aaa;
+            margin-bottom: 1.5rem;
+        }
+
         #reels {
             display: flex;
-            gap: 1.5rem;
-            margin: 2rem 0;
-            background: #111;
-            padding: 1.5rem 2rem;
+            gap: 1.25rem;
+            background: #0e0e0e;
+            padding: 1.25rem 1.5rem;
             border-radius: 16px;
             border: 2px solid #f0c040;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 0 20px rgba(240,192,64,0.08);
         }
+
         .reel-container {
             width: 100px;
             height: 100px;
             overflow: hidden;
             background: #0d0d0d;
-            border: 2px solid #444;
+            border: 2px solid #333;
             border-radius: 10px;
             position: relative;
         }
@@ -55,51 +103,159 @@
         }
         .reel-container.win-glow {
             border-color: #f0c040;
-            box-shadow: 0 0 20px #f0c040, 0 0 40px rgba(240, 192, 64, 0.35);
+            box-shadow: 0 0 20px #f0c040, 0 0 40px rgba(240,192,64,0.35);
         }
-        #balance, #message {
-            font-size: 1.2rem;
-            margin: 0.5rem 0;
+
+        #message {
+            font-size: 1.15rem;
+            color: #f0c040;
+            min-height: 1.75rem;
+            margin: 1.25rem 0 0.25rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
         }
-        #message { color: #f0c040; min-height: 1.5rem; }
-        select, button {
+
+        /* ── Controls ── */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.4rem;
+            margin-top: 0.5rem;
+            width: 100%;
+        }
+
+        .bet-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .bet-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .chips {
+            display: flex;
+            gap: 0.9rem;
+        }
+
+        .chip {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.12);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .chip::after {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            border: 1.5px dashed rgba(255,255,255,0.16);
+            pointer-events: none;
+        }
+        .chip:hover {
+            transform: translateY(-3px) scale(1.07);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.7);
+        }
+        .chip.active {
+            border-color: #f0c040;
+            box-shadow: 0 0 0 3px rgba(240,192,64,0.35), 0 6px 18px rgba(0,0,0,0.7);
+            transform: translateY(-2px);
+        }
+        .chip-blue   { background: linear-gradient(160deg, #1565c0, #1e88e5); }
+        .chip-green  { background: linear-gradient(160deg, #2e7d32, #43a047); }
+        .chip-orange { background: linear-gradient(160deg, #bf360c, #fb8c00); }
+        .chip-red    { background: linear-gradient(160deg, #b71c1c, #e53935); }
+
+        .action-btns {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .spin-btn {
+            background: linear-gradient(160deg, #c89618, #f0c040);
+            color: #0a0a0a;
+            font-weight: 700;
             font-size: 1rem;
-            padding: 0.5rem 1rem;
-            margin: 0.5rem;
-            border-radius: 8px;
+            padding: 0.7rem 2.2rem;
+            border-radius: 10px;
             border: none;
             cursor: pointer;
+            letter-spacing: 0.03em;
+            transition: transform 0.12s, box-shadow 0.15s;
+            box-shadow: 0 4px 14px rgba(240,192,64,0.28);
         }
-        button {
-            background: #f0c040;
-            color: #0a0a0a;
-            font-weight: bold;
+        .spin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(240,192,64,0.42);
         }
-        button:hover { background: #d4a820; }
-        a { color: #f0c040; margin-top: 2rem; }
+        .spin-btn:active { transform: translateY(0); }
+
+        .auto-btn {
+            background: transparent;
+            color: #f0c040;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.7rem 1.4rem;
+            border-radius: 10px;
+            border: 1.5px solid rgba(240,192,64,0.5);
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .auto-btn:hover {
+            background: rgba(240,192,64,0.08);
+            border-color: #f0c040;
+        }
     </style>
 </head>
 <body>
-    <h1>🎰 Slot Machine</h1>
-    <div id="balance">Credits: 1000</div>
-    <div id="reels">
-        <div class="reel-container" id="reel-0"><div class="reel-track" id="track-0"></div></div>
-        <div class="reel-container" id="reel-1"><div class="reel-track" id="track-1"></div></div>
-        <div class="reel-container" id="reel-2"><div class="reel-track" id="track-2"></div></div>
+    <div class="slots-wrapper">
+        <a class="back-link" href="/static/index.html">← Zurück zur Lobby</a>
+        <h1>🎰 Slot Machine</h1>
+        <div id="balance">Credits: 1000</div>
+
+        <div id="reels">
+            <div class="reel-container" id="reel-0"><div class="reel-track" id="track-0"></div></div>
+            <div class="reel-container" id="reel-1"><div class="reel-track" id="track-1"></div></div>
+            <div class="reel-container" id="reel-2"><div class="reel-track" id="track-2"></div></div>
+        </div>
+
+        <div id="message"></div>
+
+        <div class="controls">
+            <div class="bet-section">
+                <span class="bet-label">Einsatz</span>
+                <div class="chips">
+                    <button class="chip chip-blue active" onclick="selectChip(this, 10)">10</button>
+                    <button class="chip chip-green" onclick="selectChip(this, 25)">25</button>
+                    <button class="chip chip-orange" onclick="selectChip(this, 50)">50</button>
+                    <button class="chip chip-red" onclick="selectChip(this, 100)">100</button>
+                </div>
+                <input type="hidden" id="bet" value="10">
+            </div>
+            <div class="action-btns">
+                <button class="spin-btn" onclick="spin()">Drehen!</button>
+                <button class="auto-btn" id="autoplay" onclick="autoplay()">Autoplay</button>
+            </div>
+        </div>
     </div>
-    <div id="message"></div>
-    <div>
-        <label>Einsatz:</label>
-        <select id="bet">
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-        </select>
-        <button onclick="spin()">Drehen!</button>
-        <button id="autoplay" onclick="autoplay()">Autoplay</button>
-    </div>
-    <a href="/static/index.html">← Zurück zur Lobby</a>
 
     <script>
         const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
@@ -115,6 +271,12 @@
         let autospin_state = false;
         let isSpinning = false;
         let phase1Interval = null;
+
+        function selectChip(el, value) {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('bet').value = value;
+        }
 
         function randomSymbol() {
             return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
@@ -195,7 +357,9 @@
             const btn = document.getElementById("autoplay");
 
             if (autospin_state) {
-                btn.style.background = "red";
+                btn.style.background = "#c0392b";
+                btn.style.borderColor = "#c0392b";
+                btn.style.color = "#fff";
                 btn.textContent = "Stop";
 
                 while (autospin_state && balance >= parseInt(document.getElementById("bet").value)) {
@@ -203,11 +367,15 @@
                     await new Promise(r => setTimeout(r, 1200));
                 }
 
-                btn.style.background = "#f0c040";
+                btn.style.background = "";
+                btn.style.borderColor = "";
+                btn.style.color = "";
                 btn.textContent = "Autoplay";
                 autospin_state = false;
             } else {
-                btn.style.background = "#f0c040";
+                btn.style.background = "";
+                btn.style.borderColor = "";
+                btn.style.color = "";
                 btn.textContent = "Autoplay";
             }
         }
@@ -228,7 +396,6 @@
                 body: JSON.stringify({ bet: bet, balance: balance })
             }).then(r => r.json());
 
-            // Wait for API + minimum visual spin time in parallel
             const [data] = await Promise.all([
                 fetchPromise,
                 new Promise(r => setTimeout(r, 400))
@@ -242,14 +409,15 @@
                 if (autospin_state) {
                     autospin_state = false;
                     const btn = document.getElementById("autoplay");
-                    btn.style.background = "#f0c040";
+                    btn.style.background = "";
+                    btn.style.borderColor = "";
+                    btn.style.color = "";
                     btn.textContent = "Autoplay";
                 }
                 isSpinning = false;
                 return;
             }
 
-            // Staggered reel stops: reel 0 → reel 1 → reel 2
             await Promise.all([
                 animateReelStop(0, data.reels[0],   0, 600),
                 animateReelStop(1, data.reels[1], 250, 600),
