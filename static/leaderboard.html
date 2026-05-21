@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard — MyCasino</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: radial-gradient(ellipse at 50% 25%, #0e0e0e 0%, #0a0a0a 65%);
+            color: #e8e8ee;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2.5rem 1rem 5rem;
+        }
+
+        /* ── Page top ── */
+        .page-top {
+            width: 100%;
+            max-width: 680px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .back-link {
+            position: absolute;
+            left: 0;
+            top: 2px;
+            color: #555;
+            font-size: 0.83rem;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+        .back-link:hover { color: #f0c040; }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f0c040;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.6rem;
+        }
+        .logo span { color: #e8e8ee; }
+
+        /* Ornamental title bar */
+        .hall-title-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            max-width: 380px;
+        }
+        .hall-title-bar span {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: #c9952a;
+            white-space: nowrap;
+        }
+        .hall-title-bar::before {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(201,149,42,0.55));
+        }
+        .hall-title-bar::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to left, transparent, rgba(201,149,42,0.55));
+        }
+
+        /* ── Hall section ── */
+        .hall-section {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            max-width: 680px;
+            margin-bottom: 0;
+        }
+
+        /* ── Decorative suit columns ── */
+        .hall-deco {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.85rem;
+            color: rgba(180, 130, 5, 0.07);
+            font-size: 1.55rem;
+            font-family: Georgia, 'Times New Roman', serif;
+            user-select: none;
+            overflow: hidden;
+            flex-shrink: 0;
+            width: 52px;
+            height: 300px;
+        }
+
+        /* ── Podium wrapper ── */
+        .podium-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .podium {
+            display: flex;
+            align-items: flex-end;
+            width: 100%;
+        }
+
+        .podium-slot {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .podium-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            padding-bottom: 0.8rem;
+        }
+
+        .podium-crown {
+            font-size: 1.6rem;
+            line-height: 1;
+            animation: float 2.8s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-7px); }
+        }
+
+        .podium-medal { font-size: 1.9rem; line-height: 1; }
+
+        .podium-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #d8d8de;
+            text-align: center;
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .podium-name.is-me { color: #f0c040; }
+
+        .podium-balance {
+            font-size: 0.75rem;
+            color: #777;
+            font-family: monospace;
+            letter-spacing: 0.02em;
+        }
+
+        .podium-platform {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px 6px 0 0;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: rgba(255,255,255,0.35);
+        }
+        .podium-platform.gold {
+            background: linear-gradient(175deg, #c49a18 0%, #8c6d08 100%);
+            height: 90px;
+            box-shadow: inset 0 2px 0 rgba(255,255,255,0.1);
+        }
+        .podium-platform.silver {
+            background: linear-gradient(175deg, #6e6e6e 0%, #4a4a4a 100%);
+            height: 62px;
+            box-shadow: inset 0 2px 0 rgba(255,255,255,0.08);
+        }
+        .podium-platform.bronze {
+            background: linear-gradient(175deg, #7a4f2a 0%, #56341a 100%);
+            height: 40px;
+            box-shadow: inset 0 2px 0 rgba(255,255,255,0.07);
+        }
+
+        /* Stage floor */
+        .stage-floor {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right,
+                transparent 0%,
+                rgba(201,149,42,0.35) 20%,
+                rgba(201,149,42,0.35) 80%,
+                transparent 100%);
+        }
+
+        /* ── Ranking list (4th+) ── */
+        .list-section {
+            width: 100%;
+            max-width: 560px;
+            margin-top: 2.5rem;
+        }
+
+        .list-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.6rem;
+        }
+        .list-header span {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #444;
+            white-space: nowrap;
+        }
+        .list-header::before,
+        .list-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #191919;
+        }
+
+        .ranking-row {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.65rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.2rem;
+            transition: background 0.15s;
+        }
+        .ranking-row:hover { background: #111; }
+        .ranking-row.is-me {
+            background: rgba(240,192,64,0.06);
+            outline: 1px solid rgba(240,192,64,0.18);
+        }
+
+        .rank-num {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #3a3a3a;
+            width: 2rem;
+            text-align: right;
+            flex-shrink: 0;
+            font-family: monospace;
+        }
+
+        .rank-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #161616;
+            border: 1px solid #252525;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #555;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+        .is-me .rank-avatar {
+            border-color: rgba(240,192,64,0.35);
+            color: #c9952a;
+            background: rgba(240,192,64,0.07);
+        }
+
+        .rank-name {
+            flex: 1;
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #aaa;
+        }
+        .is-me .rank-name { color: #f0c040; }
+
+        .rank-balance {
+            font-size: 0.85rem;
+            color: #c9952a;
+            font-weight: 700;
+            font-family: monospace;
+            letter-spacing: 0.02em;
+        }
+
+        /* ── Loading / error ── */
+        #loading {
+            font-size: 0.88rem;
+            color: #444;
+            margin-top: 4rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-top">
+        <a class="back-link" href="/static/index.html">← Zurück zur Lobby</a>
+        <div class="logo">🃏 My<span>Casino</span></div>
+        <div class="hall-title-bar"><span>✦ Hall of Fame ✦</span></div>
+    </div>
+
+    <div class="hall-section">
+        <div class="hall-deco" aria-hidden="true">
+            <span>♠</span><span>♥</span><span>♦</span><span>♣</span>
+            <span>♠</span><span>♥</span><span>♦</span><span>♣</span>
+            <span>♠</span><span>♥</span><span>♦</span><span>♣</span>
+            <span>♠</span><span>♥</span><span>♦</span><span>♣</span>
+        </div>
+
+        <div class="podium-wrap">
+            <div id="podium" class="podium"></div>
+            <div class="stage-floor"></div>
+        </div>
+
+        <div class="hall-deco" aria-hidden="true">
+            <span>♣</span><span>♦</span><span>♥</span><span>♠</span>
+            <span>♣</span><span>♦</span><span>♥</span><span>♠</span>
+            <span>♣</span><span>♦</span><span>♥</span><span>♠</span>
+            <span>♣</span><span>♦</span><span>♥</span><span>♠</span>
+        </div>
+    </div>
+
+    <div class="list-section" id="list-section" style="display:none">
+        <div class="list-header"><span>Weitere Platzierungen</span></div>
+        <div id="ranking-list"></div>
+    </div>
+
+    <div id="loading">Lade Rangliste…</div>
+
+<script>
+    const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+        ? "http://127.0.0.1:8000"
+        : "https://casino-zzi5.onrender.com";
+
+    const currentUser = localStorage.getItem("username");
+
+    function fmt(n) {
+        return parseInt(n).toLocaleString("de-DE");
+    }
+
+    function podiumSlot(player, rank) {
+        const metalClass = ["", "gold", "silver", "bronze"][rank];
+        const medal      = ["", "🥇", "🥈", "🥉"][rank];
+        const name       = player ? player.username : "---";
+        const balance    = player ? fmt(player.balance) + " Cr." : "---";
+        const isMe       = player && player.username === currentUser;
+
+        return `<div class="podium-slot">
+            <div class="podium-info">
+                ${rank === 1 ? '<div class="podium-crown">👑</div>' : ''}
+                <div class="podium-medal">${medal}</div>
+                <div class="podium-name${isMe ? ' is-me' : ''}">${name}</div>
+                <div class="podium-balance">${balance}</div>
+            </div>
+            <div class="podium-platform ${metalClass}">${rank}</div>
+        </div>`;
+    }
+
+    function renderPodium(players) {
+        const p1 = players[0] || null;
+        const p2 = players[1] || null;
+        const p3 = players[2] || null;
+        // Display order: 2nd (left), 1st (center), 3rd (right)
+        document.getElementById("podium").innerHTML =
+            podiumSlot(p2, 2) + podiumSlot(p1, 1) + podiumSlot(p3, 3);
+    }
+
+    function renderRankingList(players) {
+        if (players.length <= 3) return;
+        document.getElementById("list-section").style.display = "";
+        const html = players.slice(3).map((p, i) => {
+            const rank    = i + 4;
+            const isMe    = p.username === currentUser;
+            const initial = p.username.charAt(0).toUpperCase();
+            return `<div class="ranking-row${isMe ? ' is-me' : ''}">
+                <div class="rank-num">${rank}</div>
+                <div class="rank-avatar">${initial}</div>
+                <div class="rank-name">${p.username}${isMe ? ' (Du)' : ''}</div>
+                <div class="rank-balance">${fmt(p.balance)} Cr.</div>
+            </div>`;
+        }).join('');
+        document.getElementById("ranking-list").innerHTML = html;
+    }
+
+    async function loadLeaderboard() {
+        try {
+            const res = await fetch(`${API_URL}/leaderboard`);
+            if (!res.ok) throw new Error();
+            const players = await res.json();
+            document.getElementById("loading").style.display = "none";
+            renderPodium(players);
+            renderRankingList(players);
+        } catch {
+            document.getElementById("loading").textContent = "Fehler beim Laden der Rangliste.";
+        }
+    }
+
+    loadLeaderboard();
+</script>
+</body>
+</html>
