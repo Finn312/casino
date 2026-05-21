@@ -18,7 +18,7 @@ game_state = {
     "player_hand": [],
     "dealer_hand": [],
     "bet": 0,
-    "active": False
+    "active": False,
 }
 
 app.add_middleware(
@@ -30,73 +30,66 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 class SpinRequest(BaseModel):
     bet: int
     balance: int
+
 
 @app.post("/spin")
 def spin(request: SpinRequest):
     if request.bet > request.balance:
         return {"error": "Not enough credits"}
-    
+
     reels = spin_reels()
     win = slots_calculate_win(reels, request.bet)
     new_balance = request.balance - request.bet + win
-    
-    return {
-        "reels": reels,
-        "win": win,
-        "balance": new_balance
-    }
-    
-    
-    
-    
+
+    return {"reels": reels, "win": win, "balance": new_balance}
+
+
 class RollRequest(BaseModel):
     bet: int
     balance: int
     prediction: int
     num_dice: int = 2
-    
-    
+
+
 @app.post("/roll")
 def roll(request: RollRequest):
     if request.bet > request.balance:
         return {"error": "Not enough credits"}
-    
+
     win, numbers = dice_calculate_win(request.bet, request.prediction, request.num_dice)
     new_balance = request.balance - request.bet + win
-    
-    return {
-        "win": win,
-        "numbers": numbers,
-        "balance": new_balance
-    }
-    
-    
+
+    return {"win": win, "numbers": numbers, "balance": new_balance}
+
+
 class BlackJackRequest(BaseModel):
     bet: int
     balance: int
-    
-    
+
+
 @app.post("/blackjack/start")
 def blackjack_start(request: BlackJackRequest):
     if request.bet > request.balance:
         return {"error": "Not enough credits"}
-    
+
     game_state["deck"] = shuffle_deck()
     game_state["player_hand"] = [game_state["deck"].pop(0), game_state["deck"].pop(0)]
     game_state["dealer_hand"] = [game_state["deck"].pop(0), game_state["deck"].pop(0)]
     game_state["bet"] = request.bet
     game_state["active"] = True
-    
+
     return {
         "player_hand": game_state["player_hand"],
         "player_value": hand_value(game_state["player_hand"]),
         "dealer_card": game_state["dealer_hand"][0],
-        "active": game_state["active"]
+        "active": game_state["active"],
     }
-    
+
+
 @app.post("/blackjack/hit")
 def blackjack_hit():
     game_state["player_hand"].append(game_state["deck"].pop(0))
@@ -106,98 +99,105 @@ def blackjack_hit():
             "player_hand": game_state["player_hand"],
             "player_value": hand_value(game_state["player_hand"]),
             "result": "bust",
-            "active": False
+            "active": False,
         }
     elif hand_value(game_state["player_hand"]) == 21:
         return {
             "player_hand": game_state["player_hand"],
             "player_value": 21,
             "result": "blackjack",
-            "active": True
+            "active": True,
         }
     else:
         return {
             "player_hand": game_state["player_hand"],
             "player_value": hand_value(game_state["player_hand"]),
             "result": "continue",
-            "active": True
+            "active": True,
         }
 
 
 class BlackJackStandRequest(BaseModel):
     balance: int
 
+
 @app.post("/blackjack/stand")
 def blackjack_stand(request: BlackJackStandRequest):
-    game_state["dealer_hand"] = dealer_draw(game_state["dealer_hand"], game_state["deck"])
+    game_state["dealer_hand"] = dealer_draw(
+        game_state["dealer_hand"], game_state["deck"]
+    )
     player_value = hand_value(game_state["player_hand"])
     dealer_value = hand_value(game_state["dealer_hand"])
     gewinner = check_winner(player_value, dealer_value)
-    
+
     if gewinner == "player":
         win = game_state["bet"] * 2
     elif gewinner == "draw":
         win = game_state["bet"]
     else:
         win = 0
-    
+
     new_balance = request.balance - game_state["bet"] + win
     game_state["active"] = False
-    
+
     return {
         "player_hand": game_state["player_hand"],
         "player_value": player_value,
         "dealer_value": dealer_value,
         "dealer_hand": game_state["dealer_hand"],
         "gewinner": gewinner,
-        "balance": new_balance
+        "balance": new_balance,
     }
-    
-    
+
+
 class LoginRequest(BaseModel):
     username: str
     password: str
-    
-    
+
+
 @app.post("/register")
-def register(request: LoginRequest, db = Depends(get_db)):
+def register(request: LoginRequest, db=Depends(get_db)):
     existing_user = db.query(User).filter(User.username == request.username).first()
     if existing_user:
         return {"error": "Es gitb diesen Namen bereits"}
     else:
-        new_user = User(username= request.username, password= request.password)
+        new_user = User(username=request.username, password=request.password)
         db.add(new_user)
         db.commit()
-        return {"message": "Erfolgreich registriert"}
-    
+        return {
+            "message": "Erfolgreich registriert",
+            "username": new_user.username,
+            "balance": new_user.balance,
+        }
+
 
 @app.post("/login")
-def login(request: LoginRequest, db = Depends(get_db)):
+def login(request: LoginRequest, db=Depends(get_db)):
     user = db.query(User).filter(User.username == request.username).first()
     if not user:
         return {"error": "Nutzer nicht gefunden"}
     if user.password != request.password:
         return {"error": "Falsches Passwort"}
-    
+
     return {
-    "message": "Erfolgreich eingeloggt",
-    "username": user.username,
-    "balance": user.balance
-}
-    
-    
+        "message": "Erfolgreich eingeloggt",
+        "username": user.username,
+        "balance": user.balance,
+    }
+
+
 class UpdateBalanceRequest(BaseModel):
     username: str
     new_balance: int
-    
+
+
 @app.post("/update_balance")
-def update_balance(request: UpdateBalanceRequest, db = Depends(get_db)):
+def update_balance(request: UpdateBalanceRequest, db=Depends(get_db)):
     user = db.query(User).filter(User.username == request.username).first()
     if not user:
         return {"error": "Nutzer nicht gefunden"}
-    
+
     user.balance = request.new_balance
     db.commit()
-    
+
     return {"message": "Balance aktualisiert", "new_balance": user.balance}
-    

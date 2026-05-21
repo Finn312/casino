@@ -99,8 +99,8 @@
     document.getElementById("balance").textContent = parseInt(savedBalance).toLocaleString("de-DE");
 
     const savedUsername = localStorage.getItem("username");
-    if (savedUsername) {
-      document.getElementById("welcome-user").textContent = "Willkommen, " + savedUsername + "!";
+    if (savedUsername && savedUsername !== "undefined") {
+        document.getElementById("welcome-user").textContent = "Willkommen, " + savedUsername + "!";
     }
 
     window.logout = function() {
