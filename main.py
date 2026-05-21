@@ -8,6 +8,7 @@ from blackjack import shuffle_deck, hand_value, dealer_draw, check_winner
 from database.database import engine, Base, get_db
 from database import models
 from database.models import User
+import bcrypt
 
 app = FastAPI()
 
@@ -161,7 +162,8 @@ def register(request: LoginRequest, db=Depends(get_db)):
     if existing_user:
         return {"error": "Es gitb diesen Namen bereits"}
     else:
-        new_user = User(username=request.username, password=request.password)
+        hashed_password = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt())
+        new_user = User(username=request.username, password=hashed_password.decode())
         db.add(new_user)
         db.commit()
         return {
@@ -176,7 +178,7 @@ def login(request: LoginRequest, db=Depends(get_db)):
     user = db.query(User).filter(User.username == request.username).first()
     if not user:
         return {"error": "Nutzer nicht gefunden"}
-    if user.password != request.password:
+    if not bcrypt.checkpw(request.password.encode(), user.password.encode()):
         return {"error": "Falsches Passwort"}
 
     return {
