@@ -89,6 +89,41 @@
         .chip-orange { background: linear-gradient(160deg, #bf360c, #fb8c00); }
         .chip-red    { background: linear-gradient(160deg, #b71c1c, #e53935); }
 
+        .pred-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+        .pred-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            justify-content: center;
+            max-width: 380px;
+        }
+        .pred-btn {
+            background: #181818;
+            color: #f0c040;
+            border: 1px solid #333;
+            border-radius: 999px;
+            padding: 0.3rem 0.7rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+        .pred-btn:hover {
+            border-color: rgba(240,192,64,0.5);
+            background: #222;
+        }
+        .pred-btn.active {
+            border-color: #f0c040;
+            background: rgba(240,192,64,0.1);
+            box-shadow: 0 0 8px rgba(240,192,64,0.3);
+        }
+
         #würfel {
             display: flex;
             gap: 1.5rem;
@@ -166,9 +201,10 @@
       <option value="5">5</option>
     </select>
   </div>
-  <div>
-    <label>Vorhersage: </label>
-    <input type="number" id="prediction" >
+  <div class="pred-section">
+    <span class="bet-label">Vorhersage</span>
+    <div class="pred-grid" id="prediction-grid"></div>
+    <input type="hidden" id="prediction" value="">
   </div>
   <div style="margin: 0.5rem 0;">
     <span class="bet-label">Einsatz</span>
@@ -211,13 +247,32 @@
     6: [1,0,1, 1,0,1, 1,0,1]
   };
 
+  function buildPredictionGrid(numDice) {
+    const grid = document.getElementById("prediction-grid");
+    const min = numDice;
+    const max = numDice * 6;
+    grid.innerHTML = "";
+    document.getElementById("prediction").value = "";
+    for (let i = min; i <= max; i++) {
+      const btn = document.createElement("button");
+      btn.className = "pred-btn";
+      btn.textContent = i;
+      btn.onclick = function() { selectPrediction(this, i); };
+      grid.appendChild(btn);
+    }
+  }
+
+  function selectPrediction(el, value) {
+    document.querySelectorAll(".pred-btn").forEach(b => b.classList.remove("active"));
+    el.classList.add("active");
+    document.getElementById("prediction").value = value;
+  }
+
   document.getElementById("num_dice").addEventListener("change", function() {
-    const num_dice = parseInt(this.value);
-    const input = document.getElementById("prediction");
-    input.min = num_dice;
-    input.max = num_dice * 6;
-    input.placeholder = num_dice + " - " + (num_dice * 6);
+    buildPredictionGrid(parseInt(this.value));
   });
+
+  buildPredictionGrid(2);
 
   function createDiceFace(num, rolling = false) {
     const dots = DOT_MAPS[num]
