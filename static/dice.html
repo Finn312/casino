@@ -326,6 +326,12 @@
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ username: username, new_balance: balance })
           });
+
+          await fetch(`${API_URL}/SaveHistory`, {
+            method: "POST",
+            headers : {"Content-Type": "application/json"},
+            body: JSON.stringify({ username: username, game: "dice", balance: balance, win: data.win > 0, time: new Date().toISOString()})
+          })
       }
 
       würfelDiv.innerHTML = data.numbers.map(n => createDiceFace(n)).join('');
