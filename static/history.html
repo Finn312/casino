@@ -52,19 +52,30 @@
       box-shadow: 0 8px 40px rgba(0,0,0,0.55);
     }
 
-    /* ── Shared grid columns: Spiel | Balance | Gewinn/Verlust | Zeit ── */
-    .table-head,
-    #history tr {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr 2fr;
+    /* ── Table — native layout, thead aligned with tbody ── */
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
     }
 
-    /* ── Column header ── */
-    .table-head {
+    /* Column widths */
+    .history-table th:nth-child(1),
+    .history-table td:nth-child(1) { width: 14%; }
+    .history-table th:nth-child(2),
+    .history-table td:nth-child(2) { width: 16%; }
+    .history-table th:nth-child(3),
+    .history-table td:nth-child(3) { width: 18%; }
+    .history-table th:nth-child(4),
+    .history-table td:nth-child(4) { width: 52%; }
+
+    /* Header row */
+    .history-table thead tr {
       background: #161616;
       border-bottom: 1px solid #262626;
     }
-    .table-head > div {
+    .history-table th {
+      text-align: left;
       padding: 0.75rem 1.25rem;
       font-size: 0.67rem;
       font-weight: 700;
@@ -73,25 +84,19 @@
       color: #c9952a;
     }
 
-    /* ── Table ── */
-    #history {
-      width: 100%;
-      border-collapse: collapse;
-      display: block;
-    }
-
-    #history tr {
-      align-items: center;
+    /* Body rows */
+    .history-table tbody tr {
       border-bottom: 1px solid #1a1a1a;
       transition: background 0.12s;
     }
-    #history tr:last-child { border-bottom: none; }
-    #history tr:hover { background: rgba(255,255,255,0.025); }
-    #history tr:nth-child(even) { background: rgba(255,255,255,0.018); }
-    #history tr:nth-child(even):hover { background: rgba(255,255,255,0.04); }
+    .history-table tbody tr:last-child { border-bottom: none; }
+    .history-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+    .history-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.018); }
+    .history-table tbody tr:nth-child(even):hover { background: rgba(255,255,255,0.04); }
 
-    #history td {
-      min-width: 0;
+    /* Cells */
+    .history-table td {
+      text-align: left;
       padding: 0.85rem 1.25rem;
       font-size: 0.9rem;
       color: #888;
@@ -100,33 +105,10 @@
       white-space: nowrap;
     }
 
-    /* Spiel */
-    #history td:nth-child(1) {
-      color: #d8d8de;
-      font-weight: 600;
-    }
-
-    /* Balance */
-    #history td:nth-child(2) {
-      color: #e8b84b;
-      font-family: monospace;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-
-    /* Gewinn/Verlust */
-    #history td:nth-child(3) {
-      color: #b0b0b0;
-      font-family: monospace;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-
-    /* Zeit */
-    #history td:nth-child(4) {
-      color: #4a4a4a;
-      font-size: 0.82rem;
-    }
+    .history-table td:nth-child(1) { color: #d8d8de; font-weight: 600; }
+    .history-table td:nth-child(2) { color: #e8b84b; font-family: monospace; font-weight: 600; }
+    .history-table td:nth-child(3) { color: #b0b0b0; font-family: monospace; font-weight: 600; }
+    .history-table td:nth-child(4) { color: #555; font-size: 0.82rem; }
   </style>
 </head>
 <body>
@@ -156,13 +138,17 @@
     </div>
 
     <div class="history-wrap">
-      <div class="table-head">
-        <div>Spiel</div>
-        <div>Balance</div>
-        <div>Gewinn / Verlust</div>
-        <div>Zeit</div>
-      </div>
-      <table id="history"></table>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Spiel</th>
+            <th>Balance</th>
+            <th>Gewinn / Verlust</th>
+            <th>Zeit</th>
+          </tr>
+        </thead>
+        <tbody id="history"></tbody>
+      </table>
     </div>
   </main>
 
