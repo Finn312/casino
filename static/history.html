@@ -1,32 +1,202 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Spielhistorie — MyCasino</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: #0a0a0a; }
+
+    /* ── Page layout ── */
+    .history-main {
+      flex: 1;
+      padding: 3rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .page-heading {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+    }
+
+    .page-heading h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #f0c040;
+      letter-spacing: 0.02em;
+    }
+
+    .back-link {
+      font-size: 0.83rem;
+      color: #555;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: #f0c040; }
+
+    /* ── Container ── */
+    .history-wrap {
+      width: 100%;
+      max-width: 860px;
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.55);
+    }
+
+    /* ── Column header div (sits above table, same flex layout) ── */
+    .table-head {
+      display: flex;
+      background: #161616;
+      border-bottom: 1px solid #262626;
+    }
+    .table-head > div {
+      flex: 1;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: #c9952a;
+    }
+
+    /* ── Table — overrides native table layout with flex rows ── */
+    #history {
+      width: 100%;
+      border-collapse: collapse;
+      display: block;
+    }
+
+    #history tr {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #1a1a1a;
+      transition: background 0.12s;
+    }
+    #history tr:last-child { border-bottom: none; }
+    #history tr:hover { background: rgba(255,255,255,0.025); }
+    #history tr:nth-child(even) { background: rgba(255,255,255,0.018); }
+    #history tr:nth-child(even):hover { background: rgba(255,255,255,0.04); }
+
+    #history td {
+      flex: 1;
+      padding: 0.85rem 1.25rem;
+      font-size: 0.9rem;
+      color: #888;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Spiel */
+    #history td:nth-child(1) {
+      color: #d8d8de;
+      font-weight: 600;
+    }
+
+    /* Balance */
+    #history td:nth-child(2) {
+      color: #e8b84b;
+      font-family: monospace;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    /* Gewinn/Verlust */
+    #history td:nth-child(3) {
+      color: #b0b0b0;
+      font-family: monospace;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    /* Zeit */
+    #history td:nth-child(4) {
+      color: #4a4a4a;
+      font-size: 0.82rem;
+    }
+  </style>
 </head>
 <body>
-  <table id="history"></table>
-<script>
-   const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://127.0.0.1:8000"
-    : "http://192.168.178.59:8000";
 
-  async function GetHistory() {
-    username = localStorage.getItem("username")
-    const response = await fetch(`${API_URL}/get_history?username=${username}`)
-    const data = await response.json()
-    console.log(data)
+  <header>
+    <a class="logo" href="/static/index.html">🃏 My<span>Casino</span></a>
+    <nav>
+      <a href="/static/index.html#games">Games</a>
+      <a href="/static/leaderboard.html">Leaderboard</a>
+      <a href="#">Settings</a>
+    </nav>
+    <div class="header-right">
+      <span id="welcome-user" class="welcome-user"></span>
+      <div class="wallet">
+        <span class="wallet-icon">💰</span>
+        <span class="wallet-label">Credits</span>
+        <span class="wallet-amount" id="header-balance">—</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </header>
 
-    let rows = ""
-    for (const h of data) {
-      rows += "<tr><td>" + h.game + "</td><td>" + h.balance + "</td><td>" + h.win + "</td><td>" + h.time + "</td></tr>"
+  <main class="history-main">
+    <div class="page-heading">
+      <h1>Spielhistorie</h1>
+      <a class="back-link" href="/static/index.html">← Zurück zur Lobby</a>
+    </div>
+
+    <div class="history-wrap">
+      <div class="table-head">
+        <div>Spiel</div>
+        <div>Balance</div>
+        <div>Gewinn / Verlust</div>
+        <div>Zeit</div>
+      </div>
+      <table id="history"></table>
+    </div>
+  </main>
+
+  <script>
+    // ── Header ──
+    const savedUsername = localStorage.getItem("username");
+    if (savedUsername && savedUsername !== "undefined") {
+      document.getElementById("welcome-user").textContent = "Willkommen, " + savedUsername + "!";
     }
-    document.getElementById("history").innerHTML = rows
-  }
+    const savedBalance = localStorage.getItem("balance");
+    if (savedBalance) {
+      document.getElementById("header-balance").textContent = parseInt(savedBalance).toLocaleString("de-DE");
+    }
+    function logout() {
+      localStorage.removeItem("username");
+      localStorage.removeItem("balance");
+      window.location.href = "/static/login.html";
+    }
 
-  GetHistory()
+    // ── Original JS logic (unverändert) ──
+    const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? "http://127.0.0.1:8000"
+      : "http://192.168.178.59:8000";
 
-</script>
+    async function GetHistory() {
+      username = localStorage.getItem("username")
+      const response = await fetch(`${API_URL}/get_history?username=${username}`)
+      const data = await response.json()
+      console.log(data)
+
+      let rows = ""
+      for (const h of data) {
+        rows += "<tr><td>" + h.game + "</td><td>" + h.balance + "</td><td>" + h.win + "</td><td>" + h.time + "</td></tr>"
+      }
+      document.getElementById("history").innerHTML = rows
+    }
+
+    GetHistory()
+  </script>
 </body>
 </html>
