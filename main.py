@@ -233,3 +233,10 @@ def save_history(request: SaveHistoryRequest,db=Depends(get_db)):
         "win": new_history.win,
         "time": new_history.time
     }
+    
+    
+@app.get("/get_history")
+def GetHistory(username: str, db=Depends(get_db)):
+    history = db.query(game_history).filter(game_history.username == username).all()
+    return [{"username":h.username,"game":h.game,"balance":h.balance,"win":h.win,"time":h.time}for h in history]
+    
