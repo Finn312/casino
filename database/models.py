@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String
+
+from sqlalchemy import Boolean, Column, Integer, String
 from database.database import Base
 
 class User(Base):
@@ -8,3 +9,15 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     password = Column(String)
     balance = Column(Integer, default=1000)
+    
+    
+class game_history(Base):
+    __tablename__="game_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String)
+    game = Column(String)
+    balance = Column(Integer)
+    time = Column(String)
+    win = Column(Boolean)
+    

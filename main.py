@@ -1,13 +1,14 @@
 from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from sqlalchemy import Boolean
 from slots import spin_reels, calculate_win as slots_calculate_win
 from dice import calculate_win as dice_calculate_win
 from fastapi.middleware.cors import CORSMiddleware
 from blackjack import shuffle_deck, hand_value, dealer_draw, check_winner
 from database.database import engine, Base, get_db
 from database import models
-from database.models import User
+from database.models import User, game_history
 import bcrypt
 
 app = FastAPI()
@@ -209,3 +210,26 @@ def update_balance(request: UpdateBalanceRequest, db=Depends(get_db)):
 def leaderboard(db=Depends(get_db)):
     users = db.query(User).order_by(User.balance.desc()).all()
     return [{"username": u.username, "balance": u.balance} for u in users]
+
+
+class SaveHistoryRequest(BaseModel):
+    username: str
+    game: str
+    balance: int
+    win: bool
+    time: str
+    
+    
+@app.post("/SaveHistory")
+def save_history(request: SaveHistoryRequest,db=Depends(get_db)):
+    new_history = game_history(username=request.username, game=request.game,balance=request.balance,win=request.win,time=request.time)
+    db.add(new_history)
+    db.commit()
+    return{
+        "message": "Saved",
+        "username": new_history.username,
+        "game": new_history.game,
+        "balance": new_history.balance,
+        "win": new_history.win,
+        "time": new_history.time
+    }
