@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <table id="history"></table>
+<script>
+   const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "http://192.168.178.59:8000";
+
+  async function GetHistory() {
+    username = localStorage.getItem("username")
+    const response = await fetch(`${API_URL}/get_history?username=${username}`)
+    const data = await response.json()
+
+    let rows = ""
+    for (const h of data) {
+      rows += "<tr><td>" + h.game + "</td><td>" + h.balance + "</td><td>" + h.win + "</td><td>" + h.time + "</td></tr>"
+    }
+    document.getElementById("history").innerHTML = rows
+  }
+
+  GetHistory()
+
+</script>
+</body>
+</html>
