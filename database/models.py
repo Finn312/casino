@@ -9,6 +9,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     password = Column(String)
     balance = Column(Integer, default=1000)
+    is_admin = Column(Boolean, default=False)
     
     
 class game_history(Base):

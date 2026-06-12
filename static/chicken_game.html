@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chicken Game</title>
+  <style>
+     .chips {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+        .chip {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.12);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .chip::after {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            border: 1.5px dashed rgba(255,255,255,0.16);
+            pointer-events: none;
+        }
+        .chip:hover {
+            transform: translateY(-3px) scale(1.07);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.7);
+        }
+        .chip.active {
+            border-color: #f0c040;
+            box-shadow: 0 0 0 3px rgba(240,192,64,0.35), 0 6px 18px rgba(0,0,0,0.7);
+            transform: translateY(-2px);
+
+
+
+
+      .chip-blue   { background: linear-gradient(160deg, #1565c0, #1e88e5); }
+      .chip-green  { background: linear-gradient(160deg, #2e7d32, #43a047); }
+      .chip-orange { background: linear-gradient(160deg, #bf360c, #fb8c00); }
+      .chip-red    { background: linear-gradient(160deg, #b71c1c, #e53935); }
+  </style>
+</head>
+<body>
+  <hi>Chicken Game</hi>
+
+  <span class="bet-label">Einsatz</span>
+  <div class="chips">
+      <button class="chip chip-blue active" onclick="selectChip(this, 10)">10</button>
+      <button class="chip chip-green" onclick="selectChip(this, 25)">25</button>
+      <button class="chip chip-orange" onclick="selectChip(this, 50)">50</button>
+      <button class="chip chip-red" onclick="selectChip(this, 100)">100</button>
+  </div>
+</body>
+</html>
