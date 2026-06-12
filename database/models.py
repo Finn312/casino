@@ -22,3 +22,21 @@ class game_history(Base):
     time = Column(String)
     win = Column(Boolean)
     
+    
+from database.models import User
+
+from database.database import SessionLocal
+
+import bcrypt
+
+db = SessionLocal()
+
+hashed = bcrypt.hashpw("casino123".encode(), bcrypt.gensalt())
+
+admin = User(username="admin", password=hashed.decode(), balance=9999, is_admin=True)
+
+db.add(admin)
+
+db.commit()
+
+print("Admin erstellt!")
