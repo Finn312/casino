@@ -320,10 +320,8 @@
     ? "http://127.0.0.1:8000"
     : "http://192.168.178.59:8000";
 
-  const _stored = localStorage.getItem("balance");
-  let balance = (_stored !== null && !isNaN(parseInt(_stored))) ? parseInt(_stored) : 1000;
+  let balance = 1000;
   let game_state = false;
-  document.getElementById("balance").textContent = "Credits: " + balance;
 
   // ── card rendering ──────────────────────────────────────────
 
@@ -511,6 +509,24 @@
       showResult(data.error || "Fehler", "lose");
     }
   }
+
+  (async () => {
+    const username = localStorage.getItem("username");
+    if (username) {
+      try {
+        const res = await fetch(`${API_URL}/get_balance?username=${encodeURIComponent(username)}`);
+        const data = await res.json();
+        if (data.id_banned) {
+          localStorage.removeItem("username");
+          localStorage.removeItem("balance");
+          window.location.href = "login.html";
+          return;
+        }
+        balance = data.balance;
+      } catch (e) {}
+    }
+    document.getElementById("balance").textContent = "Credits: " + balance;
+  })();
 </script>
 </body>
 </html>

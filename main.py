@@ -356,3 +356,11 @@ def admin_get_history(username: str, password: str, db=Depends(get_db)):
 
     history = db.query(game_history).all()
     return [{"username":h.username,"game":h.game,"balance":h.balance,"win":h.win,"time":h.time}for h in history]
+
+
+@app.get("/get_balance")
+def get_balance(username: str, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    return {"balance": user.balance, "id_banned": user.id_banned}

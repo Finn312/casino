@@ -266,8 +266,7 @@
         const SYMBOL_HEIGHT = 100;
         const PRE_SYMBOLS = 18;
 
-        const _stored = localStorage.getItem("balance");
-        let balance = (_stored !== null && !isNaN(parseInt(_stored))) ? parseInt(_stored) : 1000;
+        let balance = 1000;
         let autospin_state = false;
         let isSpinning = false;
         let phase1Interval = null;
@@ -453,7 +452,24 @@
             isSpinning = false;
         }
 
-        initReels();
+        async function loadBalance() {
+            const username = localStorage.getItem("username");
+            if (username) {
+                try {
+                    const res = await fetch(`${API_URL}/get_balance?username=${encodeURIComponent(username)}`);
+                    const data = await res.json();
+                    if (data.id_banned) {
+                        localStorage.removeItem("username");
+                        localStorage.removeItem("balance");
+                        window.location.href = "login.html";
+                        return;
+                    }
+                    balance = data.balance;
+                } catch (e) {}
+            }
+            initReels();
+        }
+        loadBalance();
     </script>
 </body>
 </html>

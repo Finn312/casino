@@ -232,9 +232,7 @@
     el.classList.add('active');
     document.getElementById('bet').value = value;
   }
-  const _stored = localStorage.getItem("balance");
-  let balance = (_stored !== null && !isNaN(parseInt(_stored))) ? parseInt(_stored) : 1000;
-  document.getElementById("balance").textContent = "Credits: " + balance;
+  let balance = 1000;
 
   // 9-cell grid (3×3): 1 = dot, 0 = empty
   // Positions: [top-L, top-C, top-R, mid-L, mid-C, mid-R, bot-L, bot-C, bot-R]
@@ -339,5 +337,23 @@
         data.win > 0 ? "+" + (data.win - bet) + " Credits! 🎉" : "Kein Gewinn 😔";
     }, 500);
   }
+
+  (async () => {
+    const username = localStorage.getItem("username");
+    if (username) {
+      try {
+        const res = await fetch(`${API_URL}/get_balance?username=${encodeURIComponent(username)}`);
+        const data = await res.json();
+        if (data.id_banned) {
+          localStorage.removeItem("username");
+          localStorage.removeItem("balance");
+          window.location.href = "login.html";
+          return;
+        }
+        balance = data.balance;
+      } catch (e) {}
+    }
+    document.getElementById("balance").textContent = "Credits: " + balance;
+  })();
 </script>
 </html>
