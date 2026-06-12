@@ -166,8 +166,7 @@
         body: JSON.stringify({ username: username, new_balance: balance })
     });
     
-    localStorage.removeItem("username");
-    localStorage.removeItem("balance");
+    localStorage.clear();
     window.location.href = "/static/login.html";
 }
   </script>

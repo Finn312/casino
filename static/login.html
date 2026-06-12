@@ -293,6 +293,8 @@
     const password = document.getElementById("password").value;
     if (!username || !password) { showError("Bitte alle Felder ausfüllen."); return; }
 
+    localStorage.clear();
+
     showError("");
     setLoading(btnLogin, true);
 
@@ -324,6 +326,8 @@
     const password = document.getElementById("password").value;
     if (!username || !password) { showError("Bitte alle Felder ausfüllen."); return; }
     if (password.length < 4)    { showError("Passwort muss mindestens 4 Zeichen haben."); return; }
+
+    localStorage.clear();
 
     showError("");
     setLoading(btnRegister, true);
