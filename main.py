@@ -179,6 +179,8 @@ def login(request: LoginRequest, db=Depends(get_db)):
     user = db.query(User).filter(User.username == request.username).first()
     if not user:
         return {"error": "Nutzer nicht gefunden"}
+    if user.id_baned:
+        return {"error": "Nutzer ist gebannt"}
     if not bcrypt.checkpw(request.password.encode(), user.password.encode()):
         return {"error": "Falsches Passwort"}
 
@@ -267,3 +269,90 @@ def admin_set_credits(request: AdminSetCreditsRequest, db=Depends(get_db)):
         "player_name": player.username,
         "new_balance": player.balance,
     }
+    
+class AdminBanUserRequest(BaseModel):
+    username: str
+    password: str
+    player_name: str
+    
+@app.post("/admin/ban_user")
+def admin_ban_user(request: AdminBanUserRequest, db=Depends(get_db)):
+    admin_user = db.query(User).filter(User.username == request.username).first()
+    if not admin_user or not admin_user.is_admin:
+        return {"error": "Unauthorized"}
+    if not bcrypt.checkpw(request.password.encode(), admin_user.password.encode()):
+        return {"error": "Falsches Passwort"}
+
+    player = db.query(User).filter(User.username == request.player_name).first()
+    if not player:
+        return {"error": "Player not found"}
+
+    player.id_baned = True
+    db.commit()
+
+    return {
+        "message": "User banned",
+        "player_name": player.username,
+    }
+    
+@app.post("/admin/unban_user")
+def admin_unban_user(request: AdminBanUserRequest, db=Depends(get_db)):
+    admin_user = db.query(User).filter(User.username == request.username).first()
+    if not admin_user or not admin_user.is_admin:
+        return {"error": "Unauthorized"}
+    if not bcrypt.checkpw(request.password.encode(), admin_user.password.encode()):
+        return {"error": "Falsches Passwort"}
+
+    player = db.query(User).filter(User.username == request.player_name).first()
+    if not player:
+        return {"error": "Player not found"}
+
+    player.id_baned = False
+    db.commit()
+
+    return {
+        "message": "User unbanned",
+        "player_name": player.username,
+    }
+    
+@app.post("/admin/delete_user")
+def admin_delete_user(request: AdminBanUserRequest, db=Depends(get_db)):
+    admin_user = db.query(User).filter(User.username == request.username).first()
+    if not admin_user or not admin_user.is_admin:
+        return {"error": "Unauthorized"}
+    if not bcrypt.checkpw(request.password.encode(), admin_user.password.encode()):
+        return {"error": "Falsches Passwort"}
+
+    player = db.query(User).filter(User.username == request.player_name).first()
+    if not player:
+        return {"error": "Player not found"}
+
+    db.delete(player)
+    db.commit()
+
+    return {
+        "message": "User deleted",
+        "player_name": request.player_name,
+    }
+    
+@app.get("/admin/get_users")
+def admin_get_users(username: str, password: str, db=Depends(get_db)):
+    admin_user = db.query(User).filter(User.username == username).first()
+    if not admin_user or not admin_user.is_admin:
+        return {"error": "Unauthorized"}
+    if not bcrypt.checkpw(password.encode(), admin_user.password.encode()):
+        return {"error": "Falsches Passwort"}
+
+    users = db.query(User).all()
+    return [{"username": u.username, "balance": u.balance, "is_admin": u.is_admin, "id_baned": u.id_baned} for u in users]
+
+@app.get("/admin/get_history")
+def admin_get_history(username: str, password: str, db=Depends(get_db)):
+    admin_user = db.query(User).filter(User.username == username).first()
+    if not admin_user or not admin_user.is_admin:
+        return {"error": "Unauthorized"}
+    if not bcrypt.checkpw(password.encode(), admin_user.password.encode()):
+        return {"error": "Falsches Passwort"}
+
+    history = db.query(game_history).all()
+    return [{"username":h.username,"game":h.game,"balance":h.balance,"win":h.win,"time":h.time}for h in history]
