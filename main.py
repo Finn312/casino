@@ -240,3 +240,30 @@ def GetHistory(username: str, db=Depends(get_db)):
     history = db.query(game_history).filter(game_history.username == username).all()
     return [{"username":h.username,"game":h.game,"balance":h.balance,"win":h.win,"time":h.time}for h in history]
     
+    
+class AdminSetCreditsRequest(BaseModel):
+    username: str
+    password: str
+    player_name: str
+    new_balance: int
+    
+@app.post("/admin/set_credits")
+def admin_set_credits(request: AdminSetCreditsRequest, db=Depends(get_db)):
+    admin_user = db.query(User).filter(User.username == request.username).first()
+    if not admin_user or not admin_user.is_admin:
+        return {"error": "Unauthorized"}
+    if not bcrypt.checkpw(request.password.encode(), admin_user.password.encode()):
+        return {"error": "Falsches Passwort"}
+
+    player = db.query(User).filter(User.username == request.player_name).first()
+    if not player:
+        return {"error": "Player not found"}
+
+    player.balance = request.new_balance
+    db.commit()
+
+    return {
+        "message": "Balance updated",
+        "player_name": player.username,
+        "new_balance": player.balance,
+    }
