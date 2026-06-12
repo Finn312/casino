@@ -179,7 +179,7 @@ def login(request: LoginRequest, db=Depends(get_db)):
     user = db.query(User).filter(User.username == request.username).first()
     if not user:
         return {"error": "Nutzer nicht gefunden"}
-    if user.id_baned:
+    if user.id_banned:
         return {"error": "Nutzer ist gebannt"}
     if not bcrypt.checkpw(request.password.encode(), user.password.encode()):
         return {"error": "Falsches Passwort"}
