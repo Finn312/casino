@@ -308,7 +308,7 @@
         <option value="50">50</option>
         <option value="100">100</option>
       </select>
-      <button id="start-btn" class="btn-start" onclick="startGame()">Spiel Starten</button>
+      <button id="start-btn" class="btn-start" disabled onclick="startGame()">Spiel Starten</button>
     </div>
   </div>
 
@@ -320,7 +320,7 @@
     ? "http://127.0.0.1:8000"
     : "https://finndev.me";
 
-  let balance = 1000;
+  let balance;
   let game_state = false;
 
   // ── card rendering ──────────────────────────────────────────
@@ -524,7 +524,11 @@
         return;
       }
       balance = data.balance;
-    } catch (e) {}
+      document.getElementById("start-btn").disabled = false;
+    } catch (e) {
+      document.getElementById("balance").textContent = "Fehler beim Laden";
+      return;
+    }
     document.getElementById("balance").textContent = "Credits: " + balance;
   })();
 </script>

@@ -251,8 +251,8 @@
                 <input type="hidden" id="bet" value="10">
             </div>
             <div class="action-btns">
-                <button class="spin-btn" onclick="spin()">Drehen!</button>
-                <button class="auto-btn" id="autoplay" onclick="autoplay()">Autoplay</button>
+                <button class="spin-btn" id="spin-btn" disabled onclick="spin()">Drehen!</button>
+                <button class="auto-btn" id="autoplay" disabled onclick="autoplay()">Autoplay</button>
             </div>
         </div>
     </div>
@@ -266,7 +266,7 @@
         const SYMBOL_HEIGHT = 100;
         const PRE_SYMBOLS = 18;
 
-        let balance = 1000;
+        let balance;
         let autospin_state = false;
         let isSpinning = false;
         let phase1Interval = null;
@@ -466,7 +466,12 @@
                     return;
                 }
                 balance = data.balance;
-            } catch (e) {}
+                document.getElementById("spin-btn").disabled = false;
+                document.getElementById("autoplay").disabled = false;
+            } catch (e) {
+                document.getElementById("balance").textContent = "Fehler beim Laden";
+                return;
+            }
             initReels();
         })();
     </script>
