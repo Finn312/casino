@@ -23,3 +23,4 @@ class game_history(Base):
     win = Column(Boolean)
     
     
+
