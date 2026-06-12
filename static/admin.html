@@ -626,13 +626,19 @@
         return;
       }
 
+      const data = await res.json();
+      if (data.error) {
+        errEl.textContent = data.error;
+        return;
+    }
+      
+
       adminUser = u;
       adminPass = p;
       document.getElementById("admin-name-display").textContent = u;
       document.getElementById("login-screen").style.display = "none";
       document.getElementById("dashboard-screen").style.display = "block";
 
-      const data = await res.json();
       renderUsersTable(data);
       loadHistory();
     } catch {
