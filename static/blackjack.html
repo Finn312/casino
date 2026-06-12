@@ -388,7 +388,6 @@
   function flashBalance(newBalance) {
     const oldBalance = balance;
     balance = newBalance;
-    localStorage.setItem("balance", balance);
     const el = document.getElementById("balance");
     el.textContent = "Credits: " + balance;
     el.className = balance > oldBalance ? "winning" : balance < oldBalance ? "losing" : "";
@@ -512,19 +511,20 @@
 
   (async () => {
     const username = localStorage.getItem("username");
-    if (username) {
-      try {
-        const res = await fetch(`${API_URL}/get_balance?username=${encodeURIComponent(username)}`);
-        const data = await res.json();
-        if (data.id_banned) {
-          localStorage.removeItem("username");
-          localStorage.removeItem("balance");
-          window.location.href = "login.html";
-          return;
-        }
-        balance = data.balance;
-      } catch (e) {}
+    if (!username) {
+      window.location.href = "/static/login.html";
+      return;
     }
+    try {
+      const res = await fetch(`${API_URL}/get_balance?username=${encodeURIComponent(username)}`);
+      const data = await res.json();
+      if (data.id_banned) {
+        localStorage.removeItem("username");
+        window.location.href = "/static/login.html";
+        return;
+      }
+      balance = data.balance;
+    } catch (e) {}
     document.getElementById("balance").textContent = "Credits: " + balance;
   })();
 </script>
