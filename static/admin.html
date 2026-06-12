@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — MyCasino</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0d0d0f;
+      --surface:    #17171c;
+      --surface2:   #1e1e25;
+      --border:     #2a2a32;
+      --gold:       #c9952a;
+      --gold-dim:   #a57820;
+      --gold-light: #e8b84b;
+      --text:       #e8e8ee;
+      --muted:      #7a7a8c;
+      --error:      #e05555;
+      --success:    #3dba6f;
+      --red:        #c0392b;
+      --red-dim:    #922b21;
+      --radius:     10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Login screen ── */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 2.5rem 2.2rem 2rem;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,149,42,0.08);
+      animation: fadeUp 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+      text-align: center;
+      margin-bottom: 0.3rem;
+    }
+    .logo span { color: var(--text); }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 0.95rem;
+      padding: 0.7rem 1rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="number"]:focus {
+      border-color: var(--gold-dim);
+      box-shadow: 0 0 0 3px rgba(201,149,42,0.15);
+    }
+
+    input::placeholder { color: var(--muted); }
+
+    #login-error {
+      font-size: 0.85rem;
+      color: var(--error);
+      min-height: 1.1rem;
+      margin-bottom: 0.75rem;
+      text-align: center;
+    }
+
+    .btn-gold {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      border: none;
+      background: var(--gold);
+      color: #0d0d0f;
+      box-shadow: 0 4px 14px rgba(201,149,42,0.35);
+      transition: background 0.18s, box-shadow 0.18s, transform 0.1s, opacity 0.2s;
+    }
+    .btn-gold:hover:not(:disabled) {
+      background: var(--gold-light);
+      box-shadow: 0 4px 20px rgba(201,149,42,0.55);
+    }
+    .btn-gold:active:not(:disabled) { transform: scale(0.97); }
+    .btn-gold:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .btn-outline {
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      background: transparent;
+      color: var(--gold-light);
+      border: 1.5px solid var(--gold-dim);
+      transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.1s;
+    }
+    .btn-outline:hover:not(:disabled) {
+      background: var(--gold);
+      color: #0d0d0f;
+      border-color: var(--gold);
+    }
+    .btn-outline:active:not(:disabled) { transform: scale(0.97); }
+    .btn-outline:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .btn-danger {
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      background: transparent;
+      color: #e05555;
+      border: 1.5px solid var(--red-dim);
+      transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.1s;
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+    }
+    .btn-danger:active:not(:disabled) { transform: scale(0.97); }
+    .btn-danger:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* Loading spinner */
+    .loading { position: relative; color: transparent !important; }
+    .loading::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 16px; height: 16px;
+      margin: -8px 0 0 -8px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Dashboard ── */
+    #dashboard-screen { display: none; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .header-logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .header-logo span { color: var(--muted); font-weight: 400; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; }
+
+    .admin-badge {
+      background: var(--gold);
+      color: #0d0d0f;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .header-username {
+      color: var(--gold-light);
+      font-weight: 600;
+    }
+
+    .btn-logout {
+      font-size: 0.875rem;
+      color: var(--gold);
+      cursor: pointer;
+      background: var(--surface);
+      border: 1px solid var(--gold-dim);
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      font-weight: 600;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-logout:hover {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #0d0d0f;
+    }
+
+    /* ── Main layout ── */
+    .dashboard {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* ── Section cards ── */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 1.1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .section-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .section-icon {
+      font-size: 1.1rem;
+    }
+
+    .section-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* ── Action rows ── */
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .action-panel {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .action-panel h3 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .input-row input { flex: 1; }
+
+    .action-feedback {
+      font-size: 0.8rem;
+      min-height: 1rem;
+      color: var(--muted);
+    }
+    .action-feedback.ok  { color: var(--success); }
+    .action-feedback.err { color: var(--error); }
+
+    /* ── Tables ── */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    thead tr {
+      background: var(--surface2);
+    }
+
+    th {
+      padding: 0.8rem 1rem;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+    .badge-yes  { background: rgba(61,186,111,0.18); color: var(--success); }
+    .badge-no   { background: rgba(42,42,50,0.6);    color: var(--muted); }
+    .badge-ban  { background: rgba(224,85,85,0.18);  color: var(--error); }
+
+    .table-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .table-count {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface);
+      border: 1px solid var(--gold-dim);
+      color: var(--text);
+      padding: 0.75rem 1.5rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.22s, transform 0.22s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.toast-err { border-color: var(--error); }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 0 1rem; }
+      .dashboard { padding: 1.5rem 1rem 3rem; }
+      .section-body { padding: 1rem; }
+      .action-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════ LOGIN ════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="logo">⚙️ My<span>Casino</span></div>
+    <div class="subtitle">Admin-Bereich</div>
+
+    <div class="form-group">
+      <label for="l-username">Benutzername</label>
+      <input type="text" id="l-username" placeholder="Admin-Benutzername" autocomplete="username">
+    </div>
+
+    <div class="form-group">
+      <label for="l-password">Passwort</label>
+      <input type="password" id="l-password" placeholder="Admin-Passwort" autocomplete="current-password">
+    </div>
+
+    <div id="login-error"></div>
+
+    <button class="btn-gold" id="btn-login" onclick="doLogin()">Einloggen</button>
+  </div>
+</div>
+
+<!-- ════════════════ DASHBOARD ════════════════ -->
+<div id="dashboard-screen">
+  <header>
+    <div class="header-logo">
+      ⚙️ MyCasino &nbsp;<span>Admin</span>
+      <span class="admin-badge">ADMIN</span>
+    </div>
+    <div class="header-user">
+      <span class="header-username" id="admin-name-display"></span>
+      <button class="btn-logout" onclick="logout()">Ausloggen</button>
+    </div>
+  </header>
+
+  <div class="dashboard">
+
+    <!-- ── Aktionen ── -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-icon">🛠️</span>
+        <h2>Spieler-Verwaltung</h2>
+      </div>
+      <div class="section-body">
+        <div class="action-grid">
+
+          <!-- Credits setzen -->
+          <div class="action-panel">
+            <h3>💰 Credits setzen</h3>
+            <div class="form-group" style="margin:0">
+              <label>Spielername</label>
+              <input type="text" id="sc-player" placeholder="Username">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Neue Balance</label>
+              <input type="number" id="sc-balance" placeholder="z.B. 1000" min="0">
+            </div>
+            <button class="btn-outline" onclick="setCredits()">Credits setzen</button>
+            <div class="action-feedback" id="sc-feedback"></div>
+          </div>
+
+          <!-- User bannen -->
+          <div class="action-panel">
+            <h3>🚫 User bannen</h3>
+            <div class="form-group" style="margin:0">
+              <label>Spielername</label>
+              <input type="text" id="ban-player" placeholder="Username">
+            </div>
+            <button class="btn-danger" onclick="banUser()">User bannen</button>
+            <div class="action-feedback" id="ban-feedback"></div>
+          </div>
+
+          <!-- User entsperren -->
+          <div class="action-panel">
+            <h3>✅ User entsperren</h3>
+            <div class="form-group" style="margin:0">
+              <label>Spielername</label>
+              <input type="text" id="unban-player" placeholder="Username">
+            </div>
+            <button class="btn-outline" onclick="unbanUser()">User entsperren</button>
+            <div class="action-feedback" id="unban-feedback"></div>
+          </div>
+
+          <!-- User löschen -->
+          <div class="action-panel">
+            <h3>🗑️ User löschen</h3>
+            <div class="form-group" style="margin:0">
+              <label>Spielername</label>
+              <input type="text" id="del-player" placeholder="Username">
+            </div>
+            <button class="btn-danger" onclick="deleteUser()">User löschen</button>
+            <div class="action-feedback" id="del-feedback"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Alle User ── -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-icon">👥</span>
+        <h2>Alle User</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-actions">
+          <span class="table-count" id="users-count"></span>
+          <button class="btn-outline" onclick="loadUsers()">Aktualisieren ↺</button>
+        </div>
+        <div class="table-wrap">
+          <div id="users-table-wrap"><div class="empty-state">Lade Daten…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── History ── -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-icon">📜</span>
+        <h2>Gesamte History</h2>
+      </div>
+      <div class="section-body">
+        <div class="table-actions">
+          <span class="table-count" id="history-count"></span>
+          <button class="btn-outline" onclick="loadHistory()">Aktualisieren ↺</button>
+        </div>
+        <div class="table-wrap">
+          <div id="history-table-wrap"><div class="empty-state">Lade Daten…</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const API = "http://192.168.178.59:8000";
+
+  let adminUser = "";
+  let adminPass = "";
+
+  // ── Login ──────────────────────────────────────────────────────────────────
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter" && document.getElementById("login-screen").style.display !== "none") doLogin();
+  });
+
+  async function doLogin() {
+    const u = document.getElementById("l-username").value.trim();
+    const p = document.getElementById("l-password").value;
+    const errEl = document.getElementById("login-error");
+    const btn = document.getElementById("btn-login");
+
+    if (!u || !p) { errEl.textContent = "Bitte alle Felder ausfüllen."; return; }
+    errEl.textContent = "";
+    btn.classList.add("loading");
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/admin/get_users?username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`);
+      if (res.status === 403 || res.status === 401) {
+        errEl.textContent = "Ungültige Admin-Credentials.";
+        return;
+      }
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        errEl.textContent = d.detail || d.error || "Login fehlgeschlagen.";
+        return;
+      }
+
+      adminUser = u;
+      adminPass = p;
+      document.getElementById("admin-name-display").textContent = u;
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("dashboard-screen").style.display = "block";
+
+      const data = await res.json();
+      renderUsersTable(data);
+      loadHistory();
+    } catch {
+      errEl.textContent = "Server nicht erreichbar.";
+    } finally {
+      btn.classList.remove("loading");
+      btn.disabled = false;
+    }
+  }
+
+  function logout() {
+    adminUser = "";
+    adminPass = "";
+    document.getElementById("login-screen").style.display = "flex";
+    document.getElementById("dashboard-screen").style.display = "none";
+    document.getElementById("l-password").value = "";
+    document.getElementById("login-error").textContent = "";
+  }
+
+  // ── Toast ──────────────────────────────────────────────────────────────────
+
+  let toastTimer;
+  function showToast(msg, isErr = false) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "show" + (isErr ? " toast-err" : "");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = ""; }, 3000);
+  }
+
+  function setFeedback(id, msg, ok) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = "action-feedback " + (ok ? "ok" : "err");
+    setTimeout(() => { el.textContent = ""; el.className = "action-feedback"; }, 4000);
+  }
+
+  // ── Admin API helpers ──────────────────────────────────────────────────────
+
+  async function adminPost(path, extraBody) {
+    const res = await fetch(`${API}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: adminUser, password: adminPass, ...extraBody })
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, data };
+  }
+
+  // ── Set Credits ───────────────────────────────────────────────────────────
+
+  async function setCredits() {
+    const player = document.getElementById("sc-player").value.trim();
+    const balance = document.getElementById("sc-balance").value;
+    if (!player || balance === "") { setFeedback("sc-feedback", "Alle Felder ausfüllen.", false); return; }
+
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    try {
+      const { ok, data } = await adminPost("/admin/set_credits", { player_name: player, new_balance: parseFloat(balance) });
+      if (ok) {
+        setFeedback("sc-feedback", `✓ Credits für "${player}" gesetzt.`, true);
+        showToast(`Credits für ${player} auf ${balance} gesetzt.`);
+        loadUsers();
+      } else {
+        setFeedback("sc-feedback", data.detail || data.error || "Fehler.", false);
+      }
+    } catch { setFeedback("sc-feedback", "Server nicht erreichbar.", false); }
+    finally { btn.disabled = false; }
+  }
+
+  // ── Ban User ──────────────────────────────────────────────────────────────
+
+  async function banUser() {
+    const player = document.getElementById("ban-player").value.trim();
+    if (!player) { setFeedback("ban-feedback", "Spielername eingeben.", false); return; }
+
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    try {
+      const { ok, data } = await adminPost("/admin/ban_user", { player_name: player });
+      if (ok) {
+        setFeedback("ban-feedback", `✓ "${player}" gebannt.`, true);
+        showToast(`${player} wurde gebannt.`, false);
+        loadUsers();
+      } else {
+        setFeedback("ban-feedback", data.detail || data.error || "Fehler.", false);
+      }
+    } catch { setFeedback("ban-feedback", "Server nicht erreichbar.", false); }
+    finally { btn.disabled = false; }
+  }
+
+  // ── Unban User ────────────────────────────────────────────────────────────
+
+  async function unbanUser() {
+    const player = document.getElementById("unban-player").value.trim();
+    if (!player) { setFeedback("unban-feedback", "Spielername eingeben.", false); return; }
+
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    try {
+      const { ok, data } = await adminPost("/admin/unban_user", { player_name: player });
+      if (ok) {
+        setFeedback("unban-feedback", `✓ "${player}" entsperrt.`, true);
+        showToast(`${player} wurde entsperrt.`);
+        loadUsers();
+      } else {
+        setFeedback("unban-feedback", data.detail || data.error || "Fehler.", false);
+      }
+    } catch { setFeedback("unban-feedback", "Server nicht erreichbar.", false); }
+    finally { btn.disabled = false; }
+  }
+
+  // ── Delete User ───────────────────────────────────────────────────────────
+
+  async function deleteUser() {
+    const player = document.getElementById("del-player").value.trim();
+    if (!player) { setFeedback("del-feedback", "Spielername eingeben.", false); return; }
+    if (!confirm(`Wirklich "${player}" löschen? Das kann nicht rückgängig gemacht werden.`)) return;
+
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    try {
+      const { ok, data } = await adminPost("/admin/delete_user", { player_name: player });
+      if (ok) {
+        setFeedback("del-feedback", `✓ "${player}" gelöscht.`, true);
+        showToast(`${player} wurde gelöscht.`);
+        document.getElementById("del-player").value = "";
+        loadUsers();
+      } else {
+        setFeedback("del-feedback", data.detail || data.error || "Fehler.", false);
+      }
+    } catch { setFeedback("del-feedback", "Server nicht erreichbar.", false); }
+    finally { btn.disabled = false; }
+  }
+
+  // ── Load Users ────────────────────────────────────────────────────────────
+
+  async function loadUsers() {
+    const wrap = document.getElementById("users-table-wrap");
+    wrap.innerHTML = '<div class="empty-state">Lade…</div>';
+    try {
+      const res = await fetch(`${API}/admin/get_users?username=${encodeURIComponent(adminUser)}&password=${encodeURIComponent(adminPass)}`);
+      if (!res.ok) { wrap.innerHTML = '<div class="empty-state">Fehler beim Laden.</div>'; return; }
+      const data = await res.json();
+      renderUsersTable(data);
+    } catch {
+      wrap.innerHTML = '<div class="empty-state">Server nicht erreichbar.</div>';
+    }
+  }
+
+  function renderUsersTable(users) {
+    const wrap = document.getElementById("users-table-wrap");
+    document.getElementById("users-count").textContent = `${users.length} User`;
+
+    if (!users.length) { wrap.innerHTML = '<div class="empty-state">Keine User gefunden.</div>'; return; }
+
+    let html = `<table>
+      <thead><tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Balance</th>
+        <th>Admin</th>
+        <th>Gebannt</th>
+      </tr></thead><tbody>`;
+
+    for (const u of users) {
+      const banned = u.is_banned ?? u.id_banned ?? false;
+      html += `<tr>
+        <td style="color:var(--muted)">${esc(String(u.id ?? "—"))}</td>
+        <td style="font-weight:600">${esc(u.username)}</td>
+        <td style="color:var(--gold-light);font-weight:700">${formatBalance(u.balance)}</td>
+        <td>${u.is_admin ? '<span class="badge badge-yes">Ja</span>' : '<span class="badge badge-no">Nein</span>'}</td>
+        <td>${banned ? '<span class="badge badge-ban">Gebannt</span>' : '<span class="badge badge-no">Nein</span>'}</td>
+      </tr>`;
+    }
+    html += "</tbody></table>";
+    wrap.innerHTML = html;
+  }
+
+  // ── Load History ──────────────────────────────────────────────────────────
+
+  async function loadHistory() {
+    const wrap = document.getElementById("history-table-wrap");
+    wrap.innerHTML = '<div class="empty-state">Lade…</div>';
+    try {
+      const res = await fetch(`${API}/admin/get_history?username=${encodeURIComponent(adminUser)}&password=${encodeURIComponent(adminPass)}`);
+      if (!res.ok) { wrap.innerHTML = '<div class="empty-state">Fehler beim Laden.</div>'; return; }
+      const data = await res.json();
+      renderHistoryTable(data);
+    } catch {
+      wrap.innerHTML = '<div class="empty-state">Server nicht erreichbar.</div>';
+    }
+  }
+
+  function renderHistoryTable(rows) {
+    const wrap = document.getElementById("history-table-wrap");
+    document.getElementById("history-count").textContent = `${rows.length} Einträge`;
+
+    if (!rows.length) { wrap.innerHTML = '<div class="empty-state">Keine Einträge.</div>'; return; }
+
+    // Detect columns from first row
+    const sample = rows[0];
+    const knownCols = ["id", "username", "game", "bet", "win", "result", "balance_after", "timestamp", "created_at"];
+    const cols = knownCols.filter(c => c in sample);
+    const extraCols = Object.keys(sample).filter(c => !knownCols.includes(c));
+    const allCols = [...cols, ...extraCols];
+
+    const colLabels = {
+      id: "ID", username: "User", game: "Spiel", bet: "Einsatz", win: "Gewinn",
+      result: "Ergebnis", balance_after: "Balance danach", timestamp: "Zeit", created_at: "Zeit"
+    };
+
+    let html = `<table><thead><tr>`;
+    for (const c of allCols) html += `<th>${colLabels[c] ?? esc(c)}</th>`;
+    html += `</tr></thead><tbody>`;
+
+    for (const row of rows) {
+      html += "<tr>";
+      for (const c of allCols) {
+        let val = row[c] ?? "—";
+        if ((c === "bet" || c === "win") && typeof val === "number") {
+          const color = c === "win" ? (val > 0 ? "var(--success)" : "var(--error)") : "var(--text)";
+          html += `<td style="color:${color};font-weight:600">${formatBalance(val)}</td>`;
+        } else if (c === "balance_after" && typeof val === "number") {
+          html += `<td style="color:var(--gold-light)">${formatBalance(val)}</td>`;
+        } else if (c === "username") {
+          html += `<td style="font-weight:600">${esc(String(val))}</td>`;
+        } else if (c === "id") {
+          html += `<td style="color:var(--muted)">${esc(String(val))}</td>`;
+        } else {
+          html += `<td>${esc(String(val))}</td>`;
+        }
+      }
+      html += "</tr>";
+    }
+    html += "</tbody></table>";
+    wrap.innerHTML = html;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  function esc(s) {
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function formatBalance(v) {
+    if (typeof v !== "number") return String(v);
+    return v.toLocaleString("de-DE", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + " €";
+  }
+</script>
+</body>
+</html>
