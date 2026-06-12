@@ -210,7 +210,7 @@ def update_balance(request: UpdateBalanceRequest, db=Depends(get_db)):
 
 @app.get("/leaderboard")
 def leaderboard(db=Depends(get_db)):
-    users = db.query(User).order_by(User.balance.desc()).all()
+    users = db.query(User).filter(~User.is_admin).order_by(User.balance.desc()).all()
     return [{"username": u.username, "balance": u.balance} for u in users]
 
 
