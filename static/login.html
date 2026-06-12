@@ -210,6 +210,19 @@
       border-top: 1px solid var(--border);
       margin: 1.8rem 0 1.5rem;
     }
+
+    /* ── Admin link ── */
+    .admin-link {
+      position: fixed;
+      bottom: 1rem;
+      right: 1.2rem;
+      font-size: 0.7rem;
+      color: #2e2e38;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: color 0.2s;
+    }
+    .admin-link:hover { color: var(--muted); }
   </style>
 </head>
 <body>
@@ -242,6 +255,8 @@
       <button id="btn-register" disabled onclick="register()">Registrieren</button>
     </div>
   </div>
+
+<a class="admin-link" href="/static/admin.html">admin</a>
 
 <script>
   const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
