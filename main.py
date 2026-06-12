@@ -287,7 +287,7 @@ def admin_ban_user(request: AdminBanUserRequest, db=Depends(get_db)):
     if not player:
         return {"error": "Player not found"}
 
-    player.id_baned = True
+    player.id_banned = True
     db.commit()
 
     return {
@@ -307,7 +307,7 @@ def admin_unban_user(request: AdminBanUserRequest, db=Depends(get_db)):
     if not player:
         return {"error": "Player not found"}
 
-    player.id_baned = False
+    player.id_banned = False
     db.commit()
 
     return {
@@ -344,7 +344,7 @@ def admin_get_users(username: str, password: str, db=Depends(get_db)):
         return {"error": "Falsches Passwort"}
 
     users = db.query(User).all()
-    return [{"username": u.username, "balance": u.balance, "is_admin": u.is_admin, "id_baned": u.id_baned} for u in users]
+    return [{"username": u.username, "balance": u.balance, "is_admin": u.is_admin, "id_banned": u.id_banned} for u in users]
 
 @app.get("/admin/get_history")
 def admin_get_history(username: str, password: str, db=Depends(get_db)):
