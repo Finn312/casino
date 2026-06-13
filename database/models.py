@@ -11,6 +11,7 @@ class User(Base):
     balance = Column(Integer, default=1000)
     is_admin = Column(Boolean, default=False)
     id_banned = Column(Boolean, default=False)
+    show_in_leaderboard = Column(Boolean, default=True)
     
     
 class game_history(Base):

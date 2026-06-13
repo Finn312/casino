@@ -210,8 +210,8 @@ def update_balance(request: UpdateBalanceRequest, db=Depends(get_db)):
 
 @app.get("/leaderboard")
 def leaderboard(db=Depends(get_db)):
-    users = db.query(User).filter(~User.is_admin).order_by(User.balance.desc()).all()
-    return [{"username": u.username, "balance": u.balance} for u in users]
+    leaderboard_users = db.query(User).filter(User.show_in_leaderboard == True, User.id_banned == False, User.is_admin == False).order_by(User.balance.desc()).limit(10).all()
+    return [{"username": u.username, "balance": u.balance} for u in leaderboard_users]
 
 
 class SaveHistoryRequest(BaseModel):
@@ -354,7 +354,7 @@ def admin_get_history(username: str, password: str, db=Depends(get_db)):
     if not bcrypt.checkpw(password.encode(), admin_user.password.encode()):
         return {"error": "Falsches Passwort"}
 
-    history = db.query(game_history).all()
+    history = db.query(game_history).order_by(game_history.id.desc()).limit(50).all()
     return [{"username":h.username,"game":h.game,"balance":h.balance,"win":h.win,"time":h.time}for h in history]
 
 
@@ -364,3 +364,25 @@ def get_balance(username: str, db=Depends(get_db)):
     if not user:
         return {"error": "Nutzer nicht gefunden"}
     return {"balance": user.balance, "id_banned": user.id_banned}
+
+
+@app.post("/show_in_leaderboard")
+def show_in_leaderboard(request:AdminBanUserRequest, db=Depends(get_db)):
+    admin_user = db.query(User).filter(User.username == request.username).first()
+    if not admin_user or not admin_user.is_admin:
+        return {"error": "Unauthorized"}
+    if not bcrypt.checkpw(request.password.encode(), admin_user.password.encode()):
+        return {"error": "Falsches Passwort"}
+
+    player = db.query(User).filter(User.username == request.player_name).first()
+    if not player:
+        return {"error": "Player not found"}
+
+    player.show_in_leaderboard = not player.show_in_leaderboard
+    db.commit()
+
+    return {
+        "message": "Leaderboard visibility toggled",
+        "player_name": player.username,
+        "show_in_leaderboard": player.show_in_leaderboard
+    }
