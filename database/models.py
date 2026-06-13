@@ -12,7 +12,7 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     id_banned = Column(Boolean, default=False)
     show_in_leaderboard = Column(Boolean, default=True)
-    
+    total_gold_earned = Column(Integer, default=0)
     
 class game_history(Base):
     __tablename__="game_history"

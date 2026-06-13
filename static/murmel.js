@@ -1,7 +1,7 @@
 // Murmel Chat Widget
 // Vanilla JS, keine Abhängigkeiten
 
-(function() {
+(async function() {
   // Allgemeine Sprüche (auf allen Seiten)
   const QUOTES_GENERAL = [
     "Verdopple niemals deinen Einsatz... es sei denn, du tust es.",
@@ -36,6 +36,25 @@
   const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
     ? "http://127.0.0.1:8000"
     : "https://finndev.me";
+
+  const username = localStorage.getItem("username");
+  let murmelEnabled  = true;
+  let murmelInterval = 55000;
+  let murmelDuration = 6000;
+
+  if (username) {
+    try {
+      const res = await fetch(`${API_URL}/get_settings?username=${encodeURIComponent(username)}`);
+      const s   = await res.json();
+      if (!s.error) {
+        murmelEnabled  = s.murmel_enabled;
+        murmelInterval = s.murmel_interval * 1000;
+        murmelDuration = s.murmel_duration * 1000;
+      }
+    } catch {}
+  }
+
+  if (!murmelEnabled) return;
 
   let isOpen = false;
   let quoteTimeout = null;
@@ -529,17 +548,18 @@
     lastQuote = quote;
 
     bubble.textContent = quote;
-    // Animation neu starten (Element klonen damit keyframe neu triggert)
     bubble.style.display = "none";
+    bubble.style.animation = "none";
     void bubble.offsetWidth;
+    bubble.style.animation = `fadeInOut ${murmelDuration / 1000}s ease-in-out`;
     bubble.style.display = "block";
     if (bubbleTimeout) clearTimeout(bubbleTimeout);
-    bubbleTimeout = setTimeout(() => { bubble.style.display = "none"; }, 6000);
+    bubbleTimeout = setTimeout(() => { bubble.style.display = "none"; }, murmelDuration);
   }
 
   function scheduleNextBubble() {
     if (quoteTimeout) clearTimeout(quoteTimeout);
-    const delay = 50000 + Math.random() * 10000; // 50–60 Sekunden
+    const delay = murmelInterval;
     quoteTimeout = setTimeout(() => {
       if (!isOpen) showBubble();
       scheduleNextBubble();

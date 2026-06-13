@@ -14,6 +14,7 @@ import random
 import requests
 from dotenv import load_dotenv
 import os
+from utilities import calculate_level
 
 load_dotenv("/Users/finn/Desktop/Casino/.env")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -58,6 +59,7 @@ def spin(request: SpinRequest, db=Depends(get_db)):
     reels = spin_reels()
     win = slots_calculate_win(reels, request.bet)
     user.balance = user.balance - request.bet + win
+    user.total_gold_earned += win
     db.commit()
 
     return {"reels": reels, "win": win, "new_balance": user.balance}
@@ -80,6 +82,7 @@ def roll(request: RollRequest, db=Depends(get_db)):
 
     win, numbers = dice_calculate_win(request.bet, request.prediction, request.num_dice)
     user.balance = user.balance - request.bet + win
+    user.total_gold_earned += win
     db.commit()
 
     return {"win": win, "numbers": numbers, "new_balance": user.balance}
@@ -104,6 +107,12 @@ def blackjack_start(request: BlackJackRequest, db=Depends(get_db)):
     game_state["bet"] = request.bet
     game_state["active"] = True
     game_state["username"] = request.username
+    
+    if hand_value(game_state["player_hand"]) == 21:
+        win = request.bet * 2.5
+        user.balance = user.balance - request.bet + win
+        user.total_gold_earned += win
+    db.commit()
 
     return {
         "player_hand": game_state["player_hand"],
@@ -161,6 +170,7 @@ def blackjack_stand(db=Depends(get_db)):
         win = 0
 
     user.balance = user.balance - game_state["bet"] + win
+    user.total_gold_earned += win
     db.commit()
     game_state["active"] = False
 
@@ -211,6 +221,7 @@ def login(request: LoginRequest, db=Depends(get_db)):
         "message": "Erfolgreich eingeloggt",
         "username": user.username,
         "balance": user.balance,
+        "level": calculate_level(user.total_gold_earned),
     }
 
 
@@ -501,6 +512,7 @@ def chicken_game_cashout(request: RequestChickenGame, db=Depends(get_db)):
 
     win = request.bet * request.multiplier - request.bet
     user.balance += int(win)
+    user.total_gold_earned += int(request.bet * request.multiplier)
     db.commit()
 
     return {"win": win, "new_balance": user.balance}
