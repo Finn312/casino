@@ -15,7 +15,7 @@
     <nav>
       <a href="#games">Games</a>
       <a href="/static/leaderboard.html">Leaderboard</a>
-      <a href="#">Settings</a>
+      <a href="/static/settings.html">Settings</a>
     </nav>
 
     <div class="header-right">
@@ -105,13 +105,32 @@
     ];
 
     // Render game cards
-    const savedBalance = localStorage.getItem("balance") || 1000;
-    document.getElementById("balance").textContent = parseInt(savedBalance).toLocaleString("de-DE");
-
     const savedUsername = localStorage.getItem("username");
-    if (savedUsername && savedUsername !== "undefined") {
+    if (!savedUsername || savedUsername === "undefined") {
+        window.location.href = "/static/login.html";
+    }
+
+    if (savedUsername) {
         document.getElementById("welcome-user").textContent = "Willkommen, " + savedUsername + "!";
     }
+
+    (async () => {
+        try {
+            const res  = await fetch(`${API_URL}/get_balance?username=${encodeURIComponent(savedUsername)}`);
+            const data = await res.json();
+            if (data.id_banned) {
+                localStorage.clear();
+                window.location.href = "/static/login.html";
+                return;
+            }
+            const balance = data.balance ?? 0;
+            localStorage.setItem("balance", balance);
+            document.getElementById("balance").textContent = parseInt(balance).toLocaleString("de-DE");
+        } catch {
+            const fallback = localStorage.getItem("balance") || 0;
+            document.getElementById("balance").textContent = parseInt(fallback).toLocaleString("de-DE");
+        }
+    })();
 
     window.logout = function() {
       localStorage.removeItem("username");

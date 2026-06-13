@@ -517,3 +517,40 @@ def ask_murmel(request: AskMurmelRequest):
     data = response.json()
     print(data)
     return {"answer": data["choices"][0]["message"]["content"]}
+
+
+class UpdateSettingsRequest(BaseModel):
+    username: str
+    murmel_enabled: bool
+    murmel_interval: int
+    murmel_duration: int
+    
+    
+@app.get("/get_settings")
+def get_settings(username: str, db=Depends(get_db)):
+    settings = db.query(models.settings).filter(models.settings.username == username).first()
+    if not settings:
+        return {"error": "Settings not found"}
+    return {
+        "murmel_enabled": settings.murmel_enabled,
+        "murmel_interval": settings.murmel_interval,
+        "murmel_duration": settings.murmel_duration,
+    }
+
+@app.post("/update_settings")
+def update_settings(request: UpdateSettingsRequest, db=Depends(get_db)):
+    settings = db.query(models.settings).filter(models.settings.username == request.username).first()
+    if not settings:
+        settings = models.settings(
+            username=request.username,
+            murmel_enabled=request.murmel_enabled,
+            murmel_interval=request.murmel_interval,
+            murmel_duration=request.murmel_duration,
+        )
+        db.add(settings)
+    else:
+        settings.murmel_enabled = request.murmel_enabled
+        settings.murmel_interval = request.murmel_interval
+        settings.murmel_duration = request.murmel_duration
+    db.commit()
+    return {"message": "Settings updated"}
