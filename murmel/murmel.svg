@@ -1,0 +1,273 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 150 150" width="150" height="150">
+  <defs>
+
+    <radialGradient id="gFur" cx="40%" cy="28%" r="68%">
+      <stop offset="0%"   stop-color="#C08848"/>
+      <stop offset="55%"  stop-color="#9B6C32"/>
+      <stop offset="100%" stop-color="#6B4018"/>
+    </radialGradient>
+
+    <radialGradient id="gMuzzle" cx="48%" cy="38%" r="62%">
+      <stop offset="0%"   stop-color="#E0B878"/>
+      <stop offset="100%" stop-color="#B88840"/>
+    </radialGradient>
+
+    <radialGradient id="gEyeW" cx="38%" cy="32%" r="68%">
+      <stop offset="0%"   stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E8E8EC"/>
+    </radialGradient>
+
+    <radialGradient id="gJacket" cx="38%" cy="30%" r="70%">
+      <stop offset="0%"   stop-color="#2A2840"/>
+      <stop offset="100%" stop-color="#111020"/>
+    </radialGradient>
+
+    <filter id="shadow" x="-25%" y="-15%" width="150%" height="145%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="rgba(0,0,0,0.45)"/>
+    </filter>
+
+    <style>
+      /* ─── Idle bobbing (always on) ─── */
+      .char { animation: bob 2.7s ease-in-out infinite; }
+      @keyframes bob {
+        0%,100% { transform: translateY(0px); }
+        50%     { transform: translateY(-5px); }
+      }
+
+      /* ─── State cycle: 25s total, each state shows for 5s ─── */
+      .f-idle      { animation: si 25s linear infinite; }
+      .f-wink      { animation: sw 25s linear infinite; }
+      .f-grimace   { animation: sg 25s linear infinite; }
+      .f-laugh     { animation: sl 25s linear infinite; }
+      .f-surprised { animation: ss 25s linear infinite; }
+
+      /* Each keyframe: 0–20% visible (=5s), rest hidden */
+      @keyframes si { 0%,19%{opacity:1} 20%,100%{opacity:0} }
+      @keyframes sw { 0%,20%{opacity:0} 21%,39%{opacity:1} 40%,100%{opacity:0} }
+      @keyframes sg { 0%,40%{opacity:0} 41%,59%{opacity:1} 60%,100%{opacity:0} }
+      @keyframes sl { 0%,60%{opacity:0} 61%,79%{opacity:1} 80%,100%{opacity:0} }
+      @keyframes ss { 0%,80%{opacity:0} 81%,99%{opacity:1} 100%{opacity:0} }
+
+      /* ─── Wink: cheeky blink on the closed eye ─── */
+      .f-wink .wink-lash {
+        animation: sw 25s linear infinite, lash-pulse 1.2s ease-in-out 4.2s 3;
+      }
+      @keyframes lash-pulse {
+        0%,100% { opacity: 1; transform: scaleY(1); }
+        50%     { opacity: 0.4; transform: scaleY(0.3); }
+      }
+
+      /* ─── Surprised: slight scale-bounce ─── */
+      .f-surprised { transform-box: fill-box; transform-origin: 50% 100%; }
+      @keyframes ss {
+        0%,79%  { opacity: 0; }
+        80%     { opacity: 1; }
+        81%     { transform: scale(1.06); }
+        83%     { transform: scale(0.97); }
+        84%,99% { transform: scale(1); opacity: 1; }
+        100%    { opacity: 0; }
+      }
+
+      /* ─── Laugh: tiny head-shake ─── */
+      .f-laugh { transform-box: fill-box; transform-origin: 50% 100%; }
+      @keyframes sl {
+        0%,60%  { opacity: 0; }
+        61%     { opacity: 1; }
+        62%,66%,70%,74%,78% { transform: rotate(-1.5deg); }
+        64%,68%,72%,76%     { transform: rotate( 1.5deg); }
+        79%     { opacity: 1; }
+        80%,100%{ opacity: 0; transform: rotate(0); }
+      }
+    </style>
+  </defs>
+
+  <!-- ═══════════════════════════════════════
+       MAIN CHARACTER GROUP (bobbing)
+  ═══════════════════════════════════════ -->
+  <g class="char" filter="url(#shadow)">
+
+    <!-- ── EARS (behind head) ── -->
+    <ellipse cx="44" cy="34" rx="16" ry="17" fill="url(#gFur)"/>
+    <ellipse cx="106" cy="34" rx="16" ry="17" fill="url(#gFur)"/>
+    <!-- Inner ear -->
+    <ellipse cx="44" cy="35" rx="9" ry="10" fill="url(#gMuzzle)" opacity="0.75"/>
+    <ellipse cx="106" cy="35" rx="9" ry="10" fill="url(#gMuzzle)" opacity="0.75"/>
+
+    <!-- ── BODY / TUXEDO ── -->
+    <ellipse cx="75" cy="127" rx="33" ry="21" fill="url(#gJacket)"/>
+    <!-- Jacket lapels (sheen) -->
+    <ellipse cx="65" cy="116" rx="10" ry="7"  fill="#30304A" opacity="0.7"/>
+    <ellipse cx="87" cy="120" rx="7"  ry="4.5" fill="#30304A" opacity="0.45"/>
+
+    <!-- White shirt (plastron) -->
+    <path d="M 71.5,112 Q 75,107 78.5,112 L 80.5,128 Q 75,131 69.5,128 Z"
+          fill="#EEEAE2"/>
+    <!-- Shirt studs -->
+    <circle cx="75" cy="117.5" r="1.6" fill="#C4C0BC"/>
+    <circle cx="75" cy="123"   r="1.6" fill="#C4C0BC"/>
+
+    <!-- ── BOW TIE ── -->
+    <!-- Left wing -->
+    <path d="M 75,110 L 65,104 L 65,116 Z" fill="#8A0022"/>
+    <!-- Right wing -->
+    <path d="M 75,110 L 85,104 L 85,116 Z" fill="#8A0022"/>
+    <!-- Centre knot -->
+    <ellipse cx="75" cy="110" rx="4.5" ry="5.5" fill="#640018"/>
+    <!-- Knot highlight -->
+    <ellipse cx="72" cy="107" rx="3" ry="2" fill="#AA2038" opacity="0.55"/>
+
+    <!-- ── ARMS / PAWS ── -->
+    <ellipse cx="43"  cy="122" rx="12" ry="8" fill="url(#gFur)"/>
+    <ellipse cx="107" cy="122" rx="12" ry="8" fill="url(#gFur)"/>
+    <!-- Claws left -->
+    <path d="M 35,126 Q 36,131 37.5,129" stroke="#5A3018" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M 43,129  L 43,133"          stroke="#5A3018" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M 51,126 Q 50,131 48.5,129" stroke="#5A3018" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <!-- Claws right -->
+    <path d="M 99,126  Q 100,131 101.5,129" stroke="#5A3018" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M 107,129 L 107,133"           stroke="#5A3018" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M 115,126 Q 114,131 112.5,129" stroke="#5A3018" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+
+    <!-- ── HEAD ── -->
+    <circle cx="75" cy="65" r="44" fill="url(#gFur)"/>
+
+    <!-- ── MUZZLE ── -->
+    <ellipse cx="75" cy="78" rx="27" ry="20" fill="url(#gMuzzle)"/>
+
+    <!-- ── BLUSH CHEEKS ── -->
+    <circle cx="48"  cy="82" r="11" fill="#E07070" opacity="0.22"/>
+    <circle cx="102" cy="82" r="11" fill="#E07070" opacity="0.22"/>
+
+    <!-- ── NOSE ── -->
+    <ellipse cx="75" cy="77.5" rx="7" ry="5" fill="#3A1806"/>
+    <!-- Nose highlight -->
+    <ellipse cx="72.5" cy="75.8" rx="3.2" ry="2" fill="#6A3818" opacity="0.6"/>
+
+    <!-- ═══════════════════════════════════════
+         FACE STATE GROUPS
+    ═══════════════════════════════════════ -->
+
+    <!-- ── STATE 1: IDLE (normal) ── -->
+    <g class="f-idle">
+      <!-- Eyes -->
+      <circle cx="60" cy="61" r="11" fill="url(#gEyeW)"/>
+      <circle cx="90" cy="61" r="11" fill="url(#gEyeW)"/>
+      <!-- Pupils -->
+      <circle cx="61.5" cy="62.5" r="6.5" fill="#180800"/>
+      <circle cx="91.5" cy="62.5" r="6.5" fill="#180800"/>
+      <!-- Eye shine -->
+      <circle cx="64"   cy="59.5" r="2.5" fill="white"/>
+      <circle cx="94"   cy="59.5" r="2.5" fill="white"/>
+      <circle cx="59.5" cy="65"   r="1.4" fill="white" opacity="0.6"/>
+      <circle cx="89.5" cy="65"   r="1.4" fill="white" opacity="0.6"/>
+      <!-- Eyebrows -->
+      <path d="M 50,52 Q 60,46 70,51" stroke="#4A2810" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+      <path d="M 80,51 Q 90,46 100,52" stroke="#4A2810" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+      <!-- Gentle smile -->
+      <path d="M 63,87 Q 75,97 87,87" stroke="#3A1806" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    </g>
+
+    <!-- ── STATE 2: WINKING ── -->
+    <g class="f-wink">
+      <!-- Left eye (open) -->
+      <circle cx="60" cy="61" r="11" fill="url(#gEyeW)"/>
+      <circle cx="61.5" cy="62.5" r="6.5" fill="#180800"/>
+      <circle cx="64"   cy="59.5" r="2.5" fill="white"/>
+      <!-- Right eye: closed line (no white circle = winking) -->
+      <path d="M 79.5,61 Q 90,69.5 100.5,61"
+            stroke="#180800" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <!-- Eyelashes on closed eye -->
+      <g class="wink-lash">
+        <path d="M 82,64 L 80,68.5" stroke="#180800" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M 90,68 L 90,73"   stroke="#180800" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M 98,64 L 100,68.5" stroke="#180800" stroke-width="1.8" stroke-linecap="round"/>
+      </g>
+      <!-- Left brow normal, right brow raised (flirty) -->
+      <path d="M 50,52 Q 60,46 70,51"  stroke="#4A2810" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+      <path d="M 80,47 Q 90,42 100,47" stroke="#4A2810" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+      <!-- Cheeky smirk (asymmetric smile) -->
+      <path d="M 63,87 Q 76,98 89,85" stroke="#3A1806" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    </g>
+
+    <!-- ── STATE 3: GRIMACE (Zunge raus) ── -->
+    <g class="f-grimace">
+      <!-- Eyes slightly squinting (cheeky) -->
+      <circle cx="60" cy="61" r="11" fill="url(#gEyeW)"/>
+      <circle cx="90" cy="61" r="11" fill="url(#gEyeW)"/>
+      <!-- Pupils pushed slightly down (shifty look) -->
+      <circle cx="62"   cy="64.5" r="6.5" fill="#180800"/>
+      <circle cx="92"   cy="64.5" r="6.5" fill="#180800"/>
+      <circle cx="64.5" cy="62"   r="2.3" fill="white"/>
+      <circle cx="94.5" cy="62"   r="2.3" fill="white"/>
+      <!-- Squint eyelids (upper lid covering top third of eye) -->
+      <path d="M 49,58 Q 60,53.5 71,58" stroke="#9B6C32" stroke-width="7" fill="none"/>
+      <path d="M 79,58 Q 90,53.5 101,58" stroke="#9B6C32" stroke-width="7" fill="none"/>
+      <!-- Brows down-angled (mischievous) -->
+      <path d="M 50,50 Q 60,44 70,49"  stroke="#4A2810" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+      <path d="M 80,49 Q 90,44 100,50" stroke="#4A2810" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+      <!-- Open mouth -->
+      <path d="M 60,85 Q 75,97 90,85 Q 86,79 75,78 Q 64,79 60,85 Z" fill="#3A1806"/>
+      <!-- Teeth (top) -->
+      <rect x="65"   y="84.5" width="10" height="6.5" rx="2.2" fill="#EEEAE2"/>
+      <rect x="76.5" y="84.5" width="10" height="6.5" rx="2.2" fill="#EEEAE2"/>
+      <!-- Tongue sticking out -->
+      <ellipse cx="75" cy="96" rx="11" ry="8.5" fill="#CC3358"/>
+      <!-- Tongue tip indent -->
+      <path d="M 75,87.5 L 75,101" stroke="#AA1840" stroke-width="1.8"/>
+      <!-- Tongue tip curve -->
+      <ellipse cx="75" cy="101" rx="5" ry="3" fill="#BB2848"/>
+    </g>
+
+    <!-- ── STATE 4: LAUGHING ── -->
+    <g class="f-laugh">
+      <!-- Eyes: happy squint (arcs curving upward = squinting in joy) -->
+      <path d="M 49,62 Q 60,52 71,62" stroke="#180800" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <path d="M 79,62 Q 90,52 101,62" stroke="#180800" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <!-- Eye crinkle wrinkles -->
+      <path d="M 49,63 L 45.5,69.5"  stroke="#180800" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M 71,63 L 74.5,69.5"  stroke="#180800" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M 79,63 L 75.5,69.5"  stroke="#180800" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M 101,63 L 104.5,69.5" stroke="#180800" stroke-width="1.8" stroke-linecap="round"/>
+      <!-- Brows: raised and happy -->
+      <path d="M 50,49 Q 60,43 70,48"  stroke="#4A2810" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+      <path d="M 80,48 Q 90,43 100,49" stroke="#4A2810" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+      <!-- Wide open laugh mouth -->
+      <path d="M 55,82 Q 75,108 95,82 Q 89,75 75,74 Q 61,75 55,82 Z" fill="#3A1806"/>
+      <!-- Tongue inside -->
+      <ellipse cx="75" cy="96" rx="15" ry="10" fill="#BB2840"/>
+      <!-- Top teeth -->
+      <rect x="61"   y="82" width="11" height="6" rx="2.2" fill="#EEEAE2"/>
+      <rect x="73.5" y="82" width="11" height="6" rx="2.2" fill="#EEEAE2"/>
+      <!-- Extra strong blush when laughing -->
+      <circle cx="43"  cy="80" r="14" fill="#E87070" opacity="0.32"/>
+      <circle cx="107" cy="80" r="14" fill="#E87070" opacity="0.32"/>
+    </g>
+
+    <!-- ── STATE 5: SURPRISED ── -->
+    <g class="f-surprised">
+      <!-- Big wide eyes (larger circles) -->
+      <circle cx="60" cy="59" r="14" fill="url(#gEyeW)"/>
+      <circle cx="90" cy="59" r="14" fill="url(#gEyeW)"/>
+      <!-- Pupils -->
+      <circle cx="61.5" cy="60.5" r="8.5" fill="#180800"/>
+      <circle cx="91.5" cy="60.5" r="8.5" fill="#180800"/>
+      <!-- Large highlights -->
+      <circle cx="65"   cy="57"   r="4"   fill="white"/>
+      <circle cx="95"   cy="57"   r="4"   fill="white"/>
+      <circle cx="57.5" cy="64"   r="2.2" fill="white" opacity="0.65"/>
+      <circle cx="87.5" cy="64"   r="2.2" fill="white" opacity="0.65"/>
+      <!-- Brows: raised very high! -->
+      <path d="M 46,43 Q 60,36 72,42"  stroke="#4A2810" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M 78,42 Q 90,36 104,43" stroke="#4A2810" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <!-- Forehead sweat / stress lines -->
+      <line x1="64" y1="35" x2="64" y2="40.5" stroke="#7A4820" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="86" y1="35" x2="86" y2="40.5" stroke="#7A4820" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- Small O-shaped mouth -->
+      <ellipse cx="75" cy="88" rx="9" ry="10" fill="#3A1806"/>
+      <!-- Inner mouth subtle highlight -->
+      <ellipse cx="75" cy="86" rx="5.5" ry="4" fill="#6A3020" opacity="0.35"/>
+    </g>
+
+  </g>
+</svg>

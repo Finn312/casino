@@ -11,6 +11,13 @@ from database import models
 from database.models import User, game_history
 import bcrypt
 import random
+import requests
+from dotenv import load_dotenv
+import os
+
+load_dotenv("/Users/finn/Desktop/Casino/.env")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
 
 app = FastAPI()
 
@@ -211,7 +218,17 @@ def update_balance(request: UpdateBalanceRequest, db=Depends(get_db)):
 
 @app.get("/leaderboard")
 def leaderboard(db=Depends(get_db)):
-    leaderboard_users = db.query(User).filter(User.show_in_leaderboard == True, User.id_banned == False, User.is_admin == False).order_by(User.balance.desc()).limit(10).all()
+    leaderboard_users = (
+        db.query(User)
+        .filter(
+            User.show_in_leaderboard == True,
+            User.id_banned == False,
+            User.is_admin == False,
+        )
+        .order_by(User.balance.desc())
+        .limit(10)
+        .all()
+    )
     return [{"username": u.username, "balance": u.balance} for u in leaderboard_users]
 
 
@@ -221,35 +238,51 @@ class SaveHistoryRequest(BaseModel):
     balance: int
     win: bool
     time: str
-    
-    
+
+
 @app.post("/SaveHistory")
-def save_history(request: SaveHistoryRequest,db=Depends(get_db)):
-    new_history = game_history(username=request.username, game=request.game,balance=request.balance,win=request.win,time=request.time)
+def save_history(request: SaveHistoryRequest, db=Depends(get_db)):
+    new_history = game_history(
+        username=request.username,
+        game=request.game,
+        balance=request.balance,
+        win=request.win,
+        time=request.time,
+    )
     db.add(new_history)
     db.commit()
-    return{
+    return {
         "message": "Saved",
         "username": new_history.username,
         "game": new_history.game,
         "balance": new_history.balance,
         "win": new_history.win,
-        "time": new_history.time
+        "time": new_history.time,
     }
-    
-    
+
+
 @app.get("/get_history")
 def GetHistory(username: str, db=Depends(get_db)):
     history = db.query(game_history).filter(game_history.username == username).all()
-    return [{"username":h.username,"game":h.game,"balance":h.balance,"win":h.win,"time":h.time}for h in history]
-    
-    
+    return [
+        {
+            "username": h.username,
+            "game": h.game,
+            "balance": h.balance,
+            "win": h.win,
+            "time": h.time,
+        }
+        for h in history
+    ]
+
+
 class AdminSetCreditsRequest(BaseModel):
     username: str
     password: str
     player_name: str
     new_balance: int
-    
+
+
 @app.post("/admin/set_credits")
 def admin_set_credits(request: AdminSetCreditsRequest, db=Depends(get_db)):
     admin_user = db.query(User).filter(User.username == request.username).first()
@@ -270,12 +303,14 @@ def admin_set_credits(request: AdminSetCreditsRequest, db=Depends(get_db)):
         "player_name": player.username,
         "new_balance": player.balance,
     }
-    
+
+
 class AdminBanUserRequest(BaseModel):
     username: str
     password: str
     player_name: str
-    
+
+
 @app.post("/admin/ban_user")
 def admin_ban_user(request: AdminBanUserRequest, db=Depends(get_db)):
     admin_user = db.query(User).filter(User.username == request.username).first()
@@ -295,7 +330,8 @@ def admin_ban_user(request: AdminBanUserRequest, db=Depends(get_db)):
         "message": "User banned",
         "player_name": player.username,
     }
-    
+
+
 @app.post("/admin/unban_user")
 def admin_unban_user(request: AdminBanUserRequest, db=Depends(get_db)):
     admin_user = db.query(User).filter(User.username == request.username).first()
@@ -315,7 +351,8 @@ def admin_unban_user(request: AdminBanUserRequest, db=Depends(get_db)):
         "message": "User unbanned",
         "player_name": player.username,
     }
-    
+
+
 @app.post("/admin/delete_user")
 def admin_delete_user(request: AdminBanUserRequest, db=Depends(get_db)):
     admin_user = db.query(User).filter(User.username == request.username).first()
@@ -335,7 +372,8 @@ def admin_delete_user(request: AdminBanUserRequest, db=Depends(get_db)):
         "message": "User deleted",
         "player_name": request.player_name,
     }
-    
+
+
 @app.get("/admin/get_users")
 def admin_get_users(username: str, password: str, db=Depends(get_db)):
     admin_user = db.query(User).filter(User.username == username).first()
@@ -345,7 +383,17 @@ def admin_get_users(username: str, password: str, db=Depends(get_db)):
         return {"error": "Falsches Passwort"}
 
     users = db.query(User).all()
-    return [{"username": u.username, "balance": u.balance, "is_admin": u.is_admin, "id_banned": u.id_banned, "show_in_leaderboard": u.show_in_leaderboard} for u in users]
+    return [
+        {
+            "username": u.username,
+            "balance": u.balance,
+            "is_admin": u.is_admin,
+            "id_banned": u.id_banned,
+            "show_in_leaderboard": u.show_in_leaderboard,
+        }
+        for u in users
+    ]
+
 
 @app.get("/admin/get_history")
 def admin_get_history(username: str, password: str, db=Depends(get_db)):
@@ -356,7 +404,16 @@ def admin_get_history(username: str, password: str, db=Depends(get_db)):
         return {"error": "Falsches Passwort"}
 
     history = db.query(game_history).order_by(game_history.id.desc()).limit(50).all()
-    return [{"username":h.username,"game":h.game,"balance":h.balance,"win":h.win,"time":h.time}for h in history]
+    return [
+        {
+            "username": h.username,
+            "game": h.game,
+            "balance": h.balance,
+            "win": h.win,
+            "time": h.time,
+        }
+        for h in history
+    ]
 
 
 @app.get("/get_balance")
@@ -368,7 +425,7 @@ def get_balance(username: str, db=Depends(get_db)):
 
 
 @app.post("/show_in_leaderboard")
-def show_in_leaderboard(request:AdminBanUserRequest, db=Depends(get_db)):
+def show_in_leaderboard(request: AdminBanUserRequest, db=Depends(get_db)):
     admin_user = db.query(User).filter(User.username == request.username).first()
     if not admin_user or not admin_user.is_admin:
         return {"error": "Unauthorized"}
@@ -385,17 +442,18 @@ def show_in_leaderboard(request:AdminBanUserRequest, db=Depends(get_db)):
     return {
         "message": "Leaderboard visibility toggled",
         "player_name": player.username,
-        "show_in_leaderboard": player.show_in_leaderboard
+        "show_in_leaderboard": player.show_in_leaderboard,
     }
-    
-    
+
+
 class RequestChickenGame(BaseModel):
     username: str
     bet: int
     step: int
     difficulty: int
     multiplier: float
-    
+
+
 @app.post("/chicken_game")
 def chicken_game(request: RequestChickenGame, db=Depends(get_db)):
     user = db.query(User).filter(User.username == request.username).first()
@@ -403,8 +461,7 @@ def chicken_game(request: RequestChickenGame, db=Depends(get_db)):
         return {"error": "Nutzer nicht gefunden"}
     if request.bet > user.balance:
         return {"error": "Not enough credits"}
-    
-    
+
     if request.difficulty == 1:  # Easy
         survival = max(0.72, 0.82 - request.step * 0.008)
     else:  # Hard
@@ -418,23 +475,45 @@ def chicken_game(request: RequestChickenGame, db=Depends(get_db)):
 
     db.commit()
 
-    return {
-        "result": result,
-        "win": 0,
-        "new_balance": user.balance
-    }
-    
+    return {"result": result, "win": 0, "new_balance": user.balance}
+
+
 @app.post("/chicken_game_cashout")
 def chicken_game_cashout(request: RequestChickenGame, db=Depends(get_db)):
     user = db.query(User).filter(User.username == request.username).first()
     if not user:
         return {"error": "Nutzer nicht gefunden"}
-    
+
     win = request.bet * request.multiplier - request.bet
     user.balance += int(win)
     db.commit()
-    
-    return {
-        "win": win,
-        "new_balance": user.balance
-    }
+
+    return {"win": win, "new_balance": user.balance}
+
+
+class AskMurmelRequest(BaseModel):
+    question: str
+
+
+@app.post("/ask_murmel")
+def ask_murmel(request: AskMurmelRequest):
+    response = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": "llama-3.1-8b-instant",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "Du bist Murmel, ein freches witziges Murmeltier im Smoking das in einem Online-Casino arbeitet. Du erklärst Spiele, gibst Tipps und machst Witze. Antworte kurz und auf Deutsch.",
+                },
+                {"role": "user", "content": request.question},
+            ],
+        },
+    )
+    data = response.json()
+    print(data)
+    return {"answer": data["choices"][0]["message"]["content"]}
