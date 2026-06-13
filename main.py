@@ -10,6 +10,7 @@ from database.database import engine, Base, get_db
 from database import models
 from database.models import User, game_history
 import bcrypt
+import random
 
 app = FastAPI()
 
@@ -385,4 +386,55 @@ def show_in_leaderboard(request:AdminBanUserRequest, db=Depends(get_db)):
         "message": "Leaderboard visibility toggled",
         "player_name": player.username,
         "show_in_leaderboard": player.show_in_leaderboard
+    }
+    
+    
+class RequestChickenGame(BaseModel):
+    username: str
+    bet: int
+    step: int
+    difficulty: int
+    multiplier: float
+    
+@app.post("/chicken_game")
+def chicken_game(request: RequestChickenGame, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    if request.bet > user.balance:
+        return {"error": "Not enough credits"}
+    
+    
+    if request.difficulty == 1:  # Easy
+        survival = max(0.72, 0.82 - request.step * 0.008)
+    else:  # Hard
+        survival = max(0.55, 0.68 - request.step * 0.012)
+
+    if random.random() < survival:
+        result = "win"
+    else:
+        result = "lose"
+        user.balance -= request.bet
+
+    db.commit()
+
+    return {
+        "result": result,
+        "win": 0,
+        "new_balance": user.balance
+    }
+    
+@app.post("/chicken_game_cashout")
+def chicken_game_cashout(request: RequestChickenGame, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    
+    win = request.bet * request.multiplier - request.bet
+    user.balance += int(win)
+    db.commit()
+    
+    return {
+        "win": win,
+        "new_balance": user.balance
     }

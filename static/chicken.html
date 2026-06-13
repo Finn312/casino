@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Chicken Road</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #0a0a0a;
+            background-image:
+                radial-gradient(ellipse at 50% 38%, rgba(0,22,0,0.6) 0%, transparent 58%),
+                url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%22100%22%3E%3Ctext%20x%3D%228%22%20y%3D%2244%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A0%3C%2Ftext%3E%3Ctext%20x%3D%2258%22%20y%3D%2244%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A5%3C%2Ftext%3E%3Ctext%20x%3D%228%22%20y%3D%2292%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A6%3C%2Ftext%3E%3Ctext%20x%3D%2258%22%20y%3D%2292%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A3%3C%2Ftext%3E%3C%2Fsvg%3E");
+            background-size: 100% 100%, 100px 100px;
+            background-attachment: fixed;
+            background-repeat: no-repeat, repeat;
+            color: #f0f0f0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 740px;
+            background: rgba(13,13,13,0.90);
+            border: 1px solid #232323;
+            border-radius: 22px;
+            padding: 2rem 2rem 2.5rem;
+            box-shadow: 0 0 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(240,192,64,0.07);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .back-link {
+            align-self: flex-start;
+            color: #555; font-size: 0.82rem;
+            text-decoration: none; margin-bottom: 1.25rem;
+            transition: color 0.15s;
+        }
+        .back-link:hover { color: #f0c040; }
+
+        h1 { color: #f0c040; font-size: 1.8rem; margin-bottom: 0.4rem; letter-spacing: 0.02em; }
+        #balance-display { font-size: 1.05rem; color: #aaa; margin-bottom: 1.25rem; }
+
+        /* ══════════════════════════════
+           Road area
+        ══════════════════════════════ */
+        .road-area {
+            width: 100%;
+            border-radius: 14px;
+            border: 2px solid #2d3560;
+            overflow: hidden;
+            position: relative;
+            height: 210px;
+            margin-bottom: 0.75rem;
+            background: #1c2035;
+            transition: background 0.5s ease, border-color 0.5s ease, opacity 0.28s ease;
+        }
+
+        /* ── Water world (stages 9+) ── */
+        .road-area.world-water {
+            background: linear-gradient(180deg, #3dc8e0 0%, #28b0cc 45%, #1898b4 100%);
+            border-color: #20a0bc;
+        }
+        /* Subtle light glimmer on water (no hard stripe) */
+        .road-area.world-water::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse at 20% 55%, rgba(255,255,255,0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 78% 35%, rgba(255,255,255,0.09) 0%, transparent 45%),
+                radial-gradient(ellipse at 50% 80%, rgba(255,255,255,0.07) 0%, transparent 40%);
+            animation: waterGlimmer 5s ease-in-out infinite alternate;
+        }
+        @keyframes waterGlimmer {
+            from { opacity: 0.6; }
+            to   { opacity: 1.0; }
+        }
+
+        /* ══════════════════════════════
+           Lanes (FIXED positions, no scroll)
+        ══════════════════════════════ */
+        .lanes-viewport {
+            display: flex;
+            height: 100%;
+            width: 100%;
+        }
+
+        .lane {
+            flex: 1;
+            min-width: 0;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 3px 0;
+            border-right: 2px dashed rgba(255,255,255,0.07);
+            transition: background 0.2s;
+        }
+        .lane:last-child { border-right: none; }
+        .lane.is-current { background: rgba(46,204,113,0.08); }
+        .lane.is-dead    { background: rgba(220,38,38,0.09); }
+
+        .world-water .lane {
+            border-right: 1px solid rgba(255,255,255,0.12);
+        }
+        .world-water .lane.is-current { background: rgba(30,200,230,0.12); }
+        .world-water .lane.is-dead    { background: rgba(40,40,200,0.15); }
+
+        /* ══════════════════════════════
+           Multiplier bubbles
+        ══════════════════════════════ */
+        .mult-bubble {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 0.7rem; letter-spacing: -0.02em;
+            border: 3px solid transparent;
+            flex-shrink: 0;
+            transition: all 0.22s;
+            user-select: none;
+        }
+        .mult-bubble.coin {
+            font-size: 1.6rem;
+            background: radial-gradient(circle at 35% 35%, #ffe066, #b8860b);
+            border-color: #f0c040;
+            box-shadow: 0 0 10px rgba(240,192,64,0.4);
+        }
+        .mult-bubble.current {
+            background: radial-gradient(circle at 35% 35%, #4ade80, #14532d);
+            border-color: #4ade80;
+            box-shadow: 0 0 14px rgba(74,222,128,0.55);
+            color: #fff;
+        }
+        .mult-bubble.passed {
+            background: radial-gradient(circle at 35% 35%, #1e2838, #111820);
+            border-color: #182030;
+            color: #304050;
+        }
+        .mult-bubble.upcoming {
+            background: radial-gradient(circle at 35% 35%, #4a5a90, #1e2a50);
+            border-color: #3d5080;
+            color: #b0c0e0;
+        }
+        .mult-bubble.skull {
+            font-size: 1.5rem;
+            background: radial-gradient(circle at 35% 35%, #7f1d1d, #3b0a0a);
+            border-color: #dc2626;
+            box-shadow: 0 0 12px rgba(220,38,38,0.45);
+        }
+        /* Water world bubbles */
+        .world-water .mult-bubble.upcoming {
+            background: radial-gradient(circle at 35% 35%, rgba(0,80,120,0.7), rgba(0,50,80,0.8));
+            border-color: rgba(30,160,200,0.5);
+            color: #e0f8ff;
+        }
+        .world-water .mult-bubble.passed {
+            background: radial-gradient(circle at 35% 35%, rgba(0,60,90,0.5), rgba(0,30,50,0.6));
+            border-color: rgba(20,100,130,0.3);
+            color: rgba(100,200,220,0.3);
+        }
+
+        /* ══════════════════════════════
+           Road world: arch doors
+        ══════════════════════════════ */
+        .lane-arch {
+            width: 76%; height: 55px;
+            background: #141828;
+            border-radius: 50% 50% 0 0 / 28px 28px 0 0;
+            border: 2px solid #2a3256;
+            border-bottom: none;
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+        /* Stage 8: silver transition arch */
+        .lane-arch.silver-arch {
+            background: linear-gradient(180deg, #6a8090 0%, #445060 100%);
+            border-color: #90a8b8;
+            box-shadow: 0 -2px 10px rgba(140,190,210,0.3);
+        }
+
+        /* ══════════════════════════════
+           Water world: wooden planks
+        ══════════════════════════════ */
+        .plank {
+            width: 86%; height: 52px;
+            margin-top: auto;
+            flex-shrink: 0;
+            border-radius: 5px 5px 0 0;
+            overflow: hidden;
+            position: relative;
+            transform-origin: center bottom;
+        }
+
+        /* Wood plank (stages 9-15) */
+        .plank.wood {
+            background: linear-gradient(180deg, #c07838 0%, #8c5220 35%, #a86030 65%, #8c5220 100%);
+            border: 2px solid #c88844;
+            border-bottom: none;
+            box-shadow:
+                0 5px 0 #5a3010,
+                0 7px 12px rgba(0,0,0,0.5);
+        }
+        .plank.wood::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent 0px, transparent 22px,
+                rgba(0,0,0,0.14) 22px, rgba(0,0,0,0.14) 24px
+            );
+        }
+        .plank.wood::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 5px;
+            background: rgba(255,200,130,0.14);
+        }
+
+        /* Silver plank (stages 16-17) */
+        .plank.silver {
+            background: linear-gradient(180deg, #c0d0dc 0%, #7a8898 50%, #c0d0dc 100%);
+            border: 2px solid #d8e8f4;
+            border-bottom: none;
+            box-shadow:
+                0 5px 0 #3a4a58,
+                0 7px 12px rgba(0,0,0,0.45),
+                0 0 14px rgba(180,210,235,0.3);
+        }
+        .plank.silver::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent 0px, transparent 18px,
+                rgba(255,255,255,0.1) 18px, rgba(255,255,255,0.1) 20px
+            );
+        }
+
+        /* Gold plank (stage 18) */
+        .plank.gold {
+            background: linear-gradient(180deg, #f8d858 0%, #c89018 50%, #f8d858 100%);
+            border: 2px solid #ffe880;
+            border-bottom: none;
+            box-shadow:
+                0 5px 0 #7a5000,
+                0 7px 14px rgba(0,0,0,0.5),
+                0 0 22px rgba(240,192,64,0.65);
+        }
+        .plank.gold::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent 0px, transparent 18px,
+                rgba(255,255,255,0.18) 18px, rgba(255,255,255,0.18) 20px
+            );
+        }
+
+        /* Plank sinking */
+        .plank.sinking {
+            animation: plankSink 1.1s ease-in forwards;
+        }
+        @keyframes plankSink {
+            0%   { transform: translateY(0) rotate(0deg);    opacity: 1; }
+            25%  { transform: translateY(10px) rotate(5deg); opacity: 0.9; }
+            100% { transform: translateY(90px) rotate(16deg); opacity: 0; }
+        }
+
+        /* ══════════════════════════════
+           Chicken & death elements
+        ══════════════════════════════ */
+        #chicken {
+            position: absolute;
+            font-size: 2.5rem;
+            bottom: 60px;
+            z-index: 20;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        /* Car drops from top, runs over chicken */
+        #death-car {
+            position: absolute;
+            font-size: 3.5rem;
+            top: -80px;
+            left: 0;        /* set per-column in JS */
+            z-index: 15;
+            display: none;
+            pointer-events: none;
+            line-height: 1;
+            /* no rotation needed for a stone */
+        }
+        #death-car.driving {
+            display: block;
+            animation: carDriveDown 1.3s ease-in forwards;
+        }
+        @keyframes carDriveDown {
+            from { top: -80px; }
+            to   { top: 260px; }
+        }
+
+        /* Chicken sinks with plank (water death) */
+        #chicken.sinking-with-plank {
+            animation: chickenSinkWithPlank 1.15s ease-in forwards !important;
+            transition: none !important;
+        }
+        @keyframes chickenSinkWithPlank {
+            0%   { transform: translateY(0)    rotate(0deg);  opacity: 1; }
+            20%  { transform: translateY(10px) rotate(6deg);  opacity: 1; }
+            60%  { transform: translateY(40px) rotate(12deg); opacity: 0.7; }
+            100% { transform: translateY(95px) rotate(18deg); opacity: 0; }
+        }
+
+        /* ══════════════════════════════
+           Message & controls
+        ══════════════════════════════ */
+        #message {
+            font-size: 1.05rem;
+            color: #f0c040;
+            min-height: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .controls { width: 100%; display: flex; flex-direction: column; gap: 1rem; align-items: center; }
+
+        .bet-section { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+        .bet-label   { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: #666; font-weight: 600; }
+        .chips       { display: flex; gap: 0.9rem; }
+
+        .chip {
+            width: 58px; height: 58px; border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.1);
+            cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, opacity 0.15s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.12);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .chip::after {
+            content: ''; position: absolute; inset: 6px; border-radius: 50%;
+            border: 1.5px dashed rgba(255,255,255,0.16); pointer-events: none;
+        }
+        .chip:hover:not([disabled]) { transform: translateY(-3px) scale(1.07); }
+        .chip.active { border-color: #f0c040; box-shadow: 0 0 0 3px rgba(240,192,64,0.35), 0 6px 18px rgba(0,0,0,0.7); }
+        .chip[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+        .chip-blue   { background: linear-gradient(160deg,#1565c0,#1e88e5); }
+        .chip-green  { background: linear-gradient(160deg,#2e7d32,#43a047); }
+        .chip-orange { background: linear-gradient(160deg,#bf360c,#fb8c00); }
+        .chip-red    { background: linear-gradient(160deg,#b71c1c,#e53935); }
+
+        .bottom-row { display: flex; align-items: flex-end; gap: 1.2rem; flex-wrap: wrap; justify-content: center; width: 100%; }
+
+        .diff-section { display: flex; flex-direction: column; align-items: center; gap: 0.45rem; }
+        .diff-label   { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: #666; font-weight: 600; }
+        .diff-btns    { display: flex; border: 1.5px solid #2a2a2a; border-radius: 8px; overflow: hidden; }
+        .diff-btn {
+            padding: 0.5rem 1.1rem; background: #161616; border: none;
+            border-right: 1px solid #2a2a2a; color: #777;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            transition: background 0.15s, color 0.15s, opacity 0.15s;
+        }
+        .diff-btn:last-child { border-right: none; }
+        .diff-btn:hover:not([disabled]) { background: #202020; color: #bbb; }
+        .diff-btn.active { background: #f0c040; color: #0a0a0a; }
+        .diff-btn[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+        .collision-info { font-size: 0.76rem; color: #555; text-align: center; margin-top: 0.25rem; }
+        .collision-info b { color: #f0c040; transition: color 0.4s; }
+        .collision-info b.dropped { color: #4ade80; }
+
+        .action-btns { display: flex; gap: 0.65rem; align-items: center; }
+
+        .cashout-btn {
+            background: linear-gradient(160deg,#14532d,#22c55e);
+            color: #fff; font-weight: 800; font-size: 0.85rem;
+            padding: 0.65rem 1.2rem; border-radius: 10px; border: none;
+            cursor: pointer; transition: transform 0.12s, box-shadow 0.15s, opacity 0.15s;
+            box-shadow: 0 4px 14px rgba(34,197,94,0.28);
+            text-align: center; line-height: 1.4; min-width: 115px;
+        }
+        .cashout-btn:hover:not([disabled]) { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(34,197,94,0.45); }
+        .cashout-btn[disabled] { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
+        .go-btn {
+            background: linear-gradient(160deg,#c89618,#f0c040);
+            color: #0a0a0a; font-weight: 900; font-size: 1.15rem;
+            padding: 0.65rem 2rem; border-radius: 10px; border: none;
+            cursor: pointer; transition: transform 0.12s, box-shadow 0.15s, opacity 0.15s;
+            box-shadow: 0 4px 14px rgba(240,192,64,0.3);
+            min-width: 88px; letter-spacing: 0.04em;
+        }
+        .go-btn:hover:not([disabled]) { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(240,192,64,0.45); }
+        .go-btn:active:not([disabled]) { transform: translateY(0); }
+        .go-btn[disabled] { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <a class="back-link" href="/static/index.html">← Zurück zur Lobby</a>
+        <h1>🐔 Chicken Road</h1>
+        <div id="balance-display">Credits: —</div>
+
+        <div class="road-area" id="road-area">
+            <div class="lanes-viewport" id="lanes-viewport"></div>
+            <div id="chicken">🐔</div>
+            <div id="death-car">🪨</div>
+        </div>
+
+        <div id="message"></div>
+
+        <div class="controls">
+            <div class="bet-section">
+                <span class="bet-label">Einsatz</span>
+                <div class="chips">
+                    <button class="chip chip-blue active" onclick="selectChip(this,10)">10</button>
+                    <button class="chip chip-green" onclick="selectChip(this,25)">25</button>
+                    <button class="chip chip-orange" onclick="selectChip(this,50)">50</button>
+                    <button class="chip chip-red" onclick="selectChip(this,100)">100</button>
+                </div>
+            </div>
+
+            <div class="bottom-row">
+                <div class="diff-section">
+                    <span class="diff-label">Difficulty</span>
+                    <div class="diff-btns">
+                        <button class="diff-btn active" onclick="selectDiff(this,1)">Easy</button>
+                        <button class="diff-btn" onclick="selectDiff(this,2)">Hard</button>
+                    </div>
+                    <div class="collision-info">Nächster Schritt: <b id="collision-val">—</b></div>
+                </div>
+
+                <div class="action-btns">
+                    <button class="cashout-btn" id="cashout-btn" disabled onclick="cashOut()">
+                        CASH OUT<br><span id="cashout-amount">—</span>
+                    </button>
+                    <button class="go-btn" id="go-btn" disabled onclick="go()">GO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+            ? "http://127.0.0.1:8000"
+            : "https://finndev.me";
+
+        /* Layout: 9 FIXED columns per "page". Chicken walks col 0→8.
+           Page 0 = stages 0-8  (road world)
+           Page 1 = stages 9-17 (water world)
+           Page 2 = stage 18    (gold, water world)          */
+        const VISIBLE  = 9;
+        const MAX_STEP = 18;
+        const ANIM_MS  = 320;
+
+        let balance = 0, username = "", bet = 10, difficulty = 1;
+        let step = 0, multiplier = 1.0, alive = true, gameActive = false, busy = false;
+
+        /* 10^(s/18): exactly 10x at step 18 */
+        function multAt(s) { return Math.pow(10, s / MAX_STEP); }
+
+        /* Which "page" (window) a step belongs to */
+        function pageOf(s)   { return Math.floor(s / VISIBLE); }
+        function pageStart(s){ return pageOf(s) * VISIBLE; }
+        function colOf(s)    { return s - pageStart(s); }
+
+        /* ── UI helpers ── */
+        function selectChip(el, val) {
+            if (gameActive) return;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            bet = val;
+            updateCashOut();
+        }
+
+        function selectDiff(el, val) {
+            if (gameActive) return;
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            difficulty = val;
+            renderRoad();
+            updateCollision(false);
+        }
+
+        function updateCollision(dropped) {
+            /* Show initial (step-0) risk after death → visible drop */
+            const ds  = alive ? step : 0;
+            const pct = difficulty === 1
+                ? Math.min(28, Math.round(18 + ds * 0.56))
+                : Math.min(50, Math.round(32 + ds * 1.0));
+            const el = document.getElementById('collision-val');
+            el.textContent = pct + '% Kollisionsrisiko';
+            el.classList.toggle('dropped', dropped);
+            if (dropped) setTimeout(() => el.classList.remove('dropped'), 1800);
+        }
+
+        function updateCashOut() {
+            const enabled = gameActive && step > 0 && alive;
+            document.getElementById('cashout-btn').toggleAttribute('disabled', !enabled);
+            document.getElementById('cashout-amount').textContent =
+                enabled ? Math.floor(bet * multiplier) + ' Credits' : '—';
+        }
+
+        function updateBalance() {
+            document.getElementById('balance-display').textContent = 'Credits: ' + balance;
+            localStorage.setItem('balance', balance);
+        }
+
+        /* ── Chicken pixel position from column index ── */
+        function chickenLeft(col) {
+            const laneW = document.getElementById('road-area').offsetWidth / VISIBLE;
+            return col * laneW + laneW / 2 - 20;
+        }
+
+        function setChickenTransition(on) {
+            document.getElementById('chicken').style.transition = on
+                ? `left ${ANIM_MS}ms cubic-bezier(0.25,1,0.5,1), opacity 0.3s`
+                : 'none';
+        }
+
+        /* ── Road rendering ──
+           Stages are FIXED in their columns. Chicken walks across them.
+           Page determines which 9 stages are visible.                   */
+        function renderRoad() {
+            const area = document.getElementById('road-area');
+            const vp   = document.getElementById('lanes-viewport');
+            const ch   = document.getElementById('chicken');
+
+            const ws = pageStart(step);          /* first stage index in current page */
+            const isWater = ws >= 9;             /* water world starts at page 1      */
+            area.classList.toggle('world-water', isWater);
+
+            vp.innerHTML = '';
+            for (let col = 0; col < VISIBLE; col++) {
+                const idx  = ws + col;           /* absolute stage index */
+                const lane = document.createElement('div');
+                lane.className = 'lane';
+
+                const isChickenHere = (idx === step);
+                if (isChickenHere && alive && gameActive) lane.classList.add('is-current');
+                if (isChickenHere && !alive)              lane.classList.add('is-dead');
+
+                /* Empty lane (beyond max stage) */
+                if (idx > MAX_STEP) {
+                    vp.appendChild(lane);
+                    continue;
+                }
+
+                /* Bubble */
+                const bubble = document.createElement('div');
+                bubble.className = 'mult-bubble';
+
+                if (idx === 0) {
+                    bubble.classList.add('coin');
+                    bubble.textContent = '🪙';
+                } else if (idx < step) {
+                    bubble.classList.add('passed');
+                    bubble.textContent = multAt(idx).toFixed(2) + 'x';
+                } else if (isChickenHere && !alive) {
+                    bubble.classList.add('skull');
+                    bubble.textContent = '💀';
+                } else if (isChickenHere && step > 0) {
+                    bubble.classList.add('current');
+                    bubble.textContent = multiplier.toFixed(2) + 'x';
+                } else {
+                    bubble.classList.add('upcoming');
+                    bubble.textContent = multAt(idx).toFixed(2) + 'x';
+                }
+
+                /* Bottom element: arch (road) or plank (water) */
+                let bottom;
+                if (idx >= 9) {
+                    bottom = document.createElement('div');
+                    bottom.className = 'plank';
+                    if (idx === MAX_STEP)  bottom.classList.add('gold');
+                    else if (idx >= 16)    bottom.classList.add('silver');
+                    else                   bottom.classList.add('wood');
+                } else {
+                    bottom = document.createElement('div');
+                    bottom.className = 'lane-arch';
+                    if (idx === 8) bottom.classList.add('silver-arch');
+                }
+
+                lane.appendChild(bubble);
+                lane.appendChild(bottom);
+                vp.appendChild(lane);
+            }
+
+            /* Position chicken at its column */
+            ch.style.left    = chickenLeft(colOf(step)) + 'px';
+            ch.style.display = alive ? 'block' : 'none';
+        }
+
+        /* ── Animate chicken one step forward ──
+           Returns column the chicken moved TO within the current page DOM.
+           For page-transition steps, chicken slides off-screen right.    */
+        function animateChickenForward() {
+            return new Promise(resolve => {
+                const curCol    = colOf(step);
+                const nextPage  = pageOf(step + 1);
+                const isNewPage = nextPage !== pageOf(step);
+
+                const area = document.getElementById('road-area');
+                const ch   = document.getElementById('chicken');
+
+                setChickenTransition(true);
+
+                if (isNewPage) {
+                    /* Slide off-screen right */
+                    ch.style.left = (area.offsetWidth + 20) + 'px';
+                    setTimeout(() => resolve(VISIBLE), ANIM_MS + 20); /* off-screen, no plank */
+                } else {
+                    const targetCol = curCol + 1;
+                    ch.style.left   = chickenLeft(targetCol) + 'px';
+                    setTimeout(() => resolve(targetCol), ANIM_MS + 20);
+                }
+            });
+        }
+
+        /* ── Death animation ── */
+        function playDeath(deathColInDOM, nextStep) {
+            return new Promise(resolve => {
+                const isWater = nextStep >= 9;
+                const ch      = document.getElementById('chicken');
+
+                if (isWater) {
+                    /* Plank tips and sinks — chicken falls with it */
+                    if (deathColInDOM < VISIBLE) {
+                        const laneEls = document.querySelectorAll('#lanes-viewport .lane');
+                        const plank   = laneEls[deathColInDOM]?.querySelector('.plank');
+                        if (plank) plank.classList.add('sinking');
+                    }
+                    ch.classList.add('sinking-with-plank');
+                    setTimeout(() => {
+                        ch.classList.remove('sinking-with-plank');
+                        resolve();
+                    }, 1250);
+
+                } else {
+                    /* Car drops from top and runs over chicken */
+                    const car = document.getElementById('death-car');
+                    car.style.left = ch.style.left; /* align with chicken column */
+                    car.classList.add('driving');
+
+                    /* Chicken reacts when car passes (~640ms into 1.3s animation) */
+                    setTimeout(() => { ch.textContent = '💥'; }, 630);
+                    setTimeout(() => { ch.style.opacity = '0'; }, 840);
+
+                    car.addEventListener('animationend', () => {
+                        car.classList.remove('driving');
+                        resolve();
+                    }, { once: true });
+                }
+            });
+        }
+
+        /* ── Page-flip transition (fade out → rebuild → fade in) ── */
+        async function pageFlip(buildFn) {
+            const area = document.getElementById('road-area');
+            area.style.opacity = '0';
+            await new Promise(r => setTimeout(r, 290));
+            buildFn();
+            area.style.opacity = '1';
+            await new Promise(r => setTimeout(r, 290));
+        }
+
+        function setLocked(lock) {
+            document.querySelectorAll('.chip, .diff-btn').forEach(el =>
+                lock ? el.setAttribute('disabled','') : el.removeAttribute('disabled'));
+        }
+
+        /* ── GO ── */
+        async function go() {
+            if (busy) return;
+
+            /* Restart after death or cashout */
+            if (!gameActive || !alive) {
+                step = 0; multiplier = 1.0; alive = true; gameActive = true;
+                const ch = document.getElementById('chicken');
+                ch.textContent = '🐔';
+                ch.style.opacity = '1';
+                ch.style.display = 'block';
+                document.getElementById('message').textContent = '';
+                document.getElementById('go-btn').removeAttribute('disabled');
+                setLocked(true);
+                setChickenTransition(false);
+                renderRoad();
+                ch.getBoundingClientRect();   /* force reflow before enabling transition */
+                setChickenTransition(true);
+                updateCashOut();
+                updateCollision(false);
+            }
+
+            busy = true;
+            const nextStep   = step + 1;
+            const isNewPage  = pageOf(nextStep) !== pageOf(step);
+
+            /* ── Phase 1: animate forward + fetch in parallel ── */
+            const [deathCol, data] = await Promise.all([
+                animateChickenForward(),
+                fetch(`${API_URL}/chicken_game`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, bet, step: nextStep, difficulty, multiplier })
+                }).then(r => r.json()).catch(() => ({ error: 'Verbindungsfehler' }))
+            ]);
+
+            if (data.error) {
+                /* Roll back chicken to its old column */
+                setChickenTransition(false);
+                renderRoad();
+                document.getElementById('chicken').getBoundingClientRect();
+                setChickenTransition(true);
+                document.getElementById('message').textContent = data.error;
+                busy = false;
+                return;
+            }
+
+            /* ── Phase 2: process result ── */
+            if (data.result === 'win') {
+                step       = nextStep;
+                multiplier = parseFloat(multAt(step).toFixed(4));
+                balance    = data.new_balance;
+                updateBalance();
+
+                if (isNewPage) {
+                    /* Page flip: fade out, load new page, fade in */
+                    const ch = document.getElementById('chicken');
+                    await pageFlip(() => {
+                        setChickenTransition(false);
+                        renderRoad();             /* chicken at col 0 of new page */
+                        ch.getBoundingClientRect();
+                        setChickenTransition(true);
+                    });
+                } else {
+                    setChickenTransition(false);
+                    renderRoad();
+                    document.getElementById('chicken').getBoundingClientRect();
+                    setChickenTransition(true);
+                }
+
+                updateCashOut();
+                updateCollision(false);
+
+                if (step >= MAX_STEP) {
+                    document.getElementById('go-btn').setAttribute('disabled', '');
+                    document.getElementById('message').textContent = '🏆 Gold-Stufe! Cash out für 10x!';
+                } else {
+                    const zone = step >= 9 ? '🌊 Wasserzone' : '🛣️ Straßenzone';
+                    document.getElementById('message').textContent =
+                        `✅ Schritt ${step}/${MAX_STEP} — ${multiplier.toFixed(2)}x · ${zone}`;
+                }
+
+            } else {
+                /* Death */
+                step      = nextStep;
+                alive     = false;
+                gameActive = false;
+                balance   = data.new_balance;
+                updateBalance();
+
+                /* Death animation on current DOM (chicken visually at deathCol) */
+                await playDeath(deathCol, nextStep);
+
+                if (isNewPage) {
+                    /* If death happened at page boundary, flip first, then show skull */
+                    await pageFlip(() => {
+                        setChickenTransition(false);
+                        renderRoad();
+                    });
+                } else {
+                    setChickenTransition(false);
+                    renderRoad();
+                    document.getElementById('chicken').getBoundingClientRect();
+                    setChickenTransition(true);
+                }
+
+                setLocked(false);
+                updateCashOut();
+                updateCollision(true);
+                const word = nextStep >= 9 ? '🌊 Gesunken' : '💀 Überfahren';
+                document.getElementById('message').textContent =
+                    `${word} bei Schritt ${step}! -${bet} Credits`;
+                saveHistory(false);
+            }
+
+            busy = false;
+        }
+
+        /* ── Cash Out ── */
+        async function cashOut() {
+            if (busy || !gameActive || step === 0 || !alive) return;
+            busy = true;
+
+            const data = await fetch(`${API_URL}/chicken_game_cashout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, bet, step, difficulty, multiplier })
+            }).then(r => r.json()).catch(() => ({ error: 'Verbindungsfehler' }));
+
+            if (data.error) {
+                document.getElementById('message').textContent = data.error;
+                busy = false;
+                return;
+            }
+
+            gameActive = false;
+            balance    = data.new_balance;
+            updateBalance();
+            const net = Math.floor(data.win);
+            document.getElementById('message').textContent =
+                `💰 Cashout! +${net} Credits (${multiplier.toFixed(2)}x)`;
+            setLocked(false);
+            updateCashOut();
+            saveHistory(true);
+            busy = false;
+        }
+
+        async function saveHistory(win) {
+            try {
+                await Promise.all([
+                    fetch(`${API_URL}/SaveHistory`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, game: 'chicken', balance, win, time: new Date().toISOString() })
+                    }),
+                    fetch(`${API_URL}/update_balance`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, new_balance: balance })
+                    })
+                ]);
+            } catch {}
+        }
+
+        /* ── Init ── */
+        (async () => {
+            username = localStorage.getItem('username');
+            if (!username) { window.location.href = '/static/login.html'; return; }
+            try {
+                const res  = await fetch(`${API_URL}/get_balance?username=${encodeURIComponent(username)}`);
+                const data = await res.json();
+                if (data.id_banned) {
+                    localStorage.removeItem('username');
+                    window.location.href = '/static/login.html';
+                    return;
+                }
+                balance = data.balance;
+                updateBalance();
+                document.getElementById('go-btn').removeAttribute('disabled');
+            } catch {
+                document.getElementById('balance-display').textContent = 'Fehler beim Laden';
+                return;
+            }
+            setChickenTransition(false);
+            renderRoad();
+            document.getElementById('chicken').getBoundingClientRect();
+            setChickenTransition(true);
+            updateCollision(false);
+        })();
+    </script>
+</body>
+</html>

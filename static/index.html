@@ -40,7 +40,7 @@
   <main class="games" id="games">
     <div class="section-header">
       <h2>Games</h2>
-      <span>5 available</span>
+      <span>6 available</span>
     </div>
 
     <div class="games-grid" id="games-grid"></div>
@@ -95,6 +95,12 @@
         name: 'Poker',
         desc: "Build the best hand and outwit the table.",
         tag: 'Card game',
+      },
+      {
+        icon: '🐔',
+        name: 'Chicken Road',
+        desc: 'Überquere die Straße — cash out bevor das Auto kommt!',
+        tag: 'Arcade',
       },
     ];
 
@@ -154,6 +160,11 @@
 
       if (btn.dataset.game == "Blackjack") {
         window.location.href = "/static/blackjack.html"
+        return;
+      }
+
+      if (btn.dataset.game == "Chicken Road") {
+        window.location.href = "/static/chicken.html"
         return;
       }
       showToast(`${btn.dataset.game} — Coming soon!`);
