@@ -270,7 +270,7 @@
         const SYMBOL_HEIGHT = 100;
         const PRE_SYMBOLS = 18;
 
-        let balance;
+        let balance, username;
         let autospin_state = false;
         let isSpinning = false;
         let phase1Interval = null;
@@ -396,7 +396,7 @@
             const fetchPromise = fetch(`${API_URL}/spin`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ bet: bet, balance: balance })
+                body: JSON.stringify({ bet: bet, username: username })
             }).then(r => r.json());
 
             const [data] = await Promise.all([
@@ -427,21 +427,15 @@
                 animateReelStop(2, data.reels[2], 500, 600),
             ]);
 
-            balance = data.balance;
+            balance = data.new_balance;
             document.getElementById("balance").textContent = "Credits: " + balance;
 
-            const username = localStorage.getItem("username");
             if (username) {
-                await fetch(`${API_URL}/update_balance`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username: username, new_balance: balance })
-                });
                 await fetch(`${API_URL}/SaveHistory`, {
                     method: "POST",
-                    headers : {"Content-Type": "application/json"},
-                    body: JSON.stringify({ username: username, game: "slots", balance: balance, win: data.win > 0, time: new Date().toISOString()})
-                })
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: username, game: "slots", balance: balance, win: data.win > 0, time: new Date().toISOString() })
+                });
             }
 
             if (data.win > bet) {
@@ -459,7 +453,7 @@
         }
 
         (async () => {
-            const username = localStorage.getItem("username");
+            username = localStorage.getItem("username");
             if (!username) {
                 window.location.href = "/static/login.html";
                 return;

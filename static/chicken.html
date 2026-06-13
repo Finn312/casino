@@ -830,18 +830,11 @@
 
         async function saveHistory(win) {
             try {
-                await Promise.all([
-                    fetch(`${API_URL}/SaveHistory`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, game: 'chicken', balance, win, time: new Date().toISOString() })
-                    }),
-                    fetch(`${API_URL}/update_balance`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, new_balance: balance })
-                    })
-                ]);
+                await fetch(`${API_URL}/SaveHistory`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, game: 'chicken', balance, win, time: new Date().toISOString() })
+                });
             } catch {}
         }
 

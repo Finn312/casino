@@ -320,7 +320,7 @@
     ? "http://127.0.0.1:8000"
     : "https://finndev.me";
 
-  let balance;
+  let balance, username;
   let game_state = false;
 
   // ── card rendering ──────────────────────────────────────────
@@ -401,7 +401,7 @@
     const response = await fetch(`${API_URL}/blackjack/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bet: bet, balance: balance })
+      body: JSON.stringify({ bet: bet, username: username })
     });
     const data = await response.json();
     if (response.ok) {
@@ -462,9 +462,7 @@
   async function stand() {
     if (!game_state) return;
     const response = await fetch(`${API_URL}/blackjack/stand`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ balance: balance })
+      method: "POST"
     });
     const data = await response.json();
     if (response.ok) {
@@ -477,19 +475,13 @@
       document.getElementById("game").textContent =
         `Player Hand: ${data.player_hand.join(", ")} (Value: ${data.player_value}) | Dealer Hand: ${data.dealer_hand.join(", ")} (Value: ${data.dealer_value})`;
 
-      flashBalance(data.balance);
-      const username = localStorage.getItem("username");
+      flashBalance(data.new_balance);
       if (username) {
-          await fetch(`${API_URL}/update_balance`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username: username, new_balance: data.balance })
-          });
           await fetch(`${API_URL}/SaveHistory`, {
             method: "POST",
-            headers : {"Content-Type": "application/json"},
-            body: JSON.stringify({ username: username, game: "blackjack", balance: balance, win: data.win > 0, time: new Date().toISOString()})
-          })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: username, game: "blackjack", balance: balance, win: data.win > 0, time: new Date().toISOString() })
+          });
       }
       
       game_state = false;
@@ -510,7 +502,7 @@
   }
 
   (async () => {
-    const username = localStorage.getItem("username");
+    username = localStorage.getItem("username");
     if (!username) {
       window.location.href = "/static/login.html";
       return;

@@ -29,6 +29,7 @@ game_state = {
     "dealer_hand": [],
     "bet": 0,
     "active": False,
+    "username": "",
 }
 
 app.add_middleware(
@@ -43,47 +44,58 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class SpinRequest(BaseModel):
     bet: int
-    balance: int
+    username: str
 
 
 @app.post("/spin")
-def spin(request: SpinRequest):
-    if request.bet > request.balance:
+def spin(request: SpinRequest, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    if request.bet > user.balance:
         return {"error": "Not enough credits"}
 
     reels = spin_reels()
     win = slots_calculate_win(reels, request.bet)
-    new_balance = request.balance - request.bet + win
+    user.balance = user.balance - request.bet + win
+    db.commit()
 
-    return {"reels": reels, "win": win, "balance": new_balance}
+    return {"reels": reels, "win": win, "new_balance": user.balance}
 
 
 class RollRequest(BaseModel):
     bet: int
-    balance: int
+    username: str
     prediction: int
     num_dice: int = 2
 
 
 @app.post("/roll")
-def roll(request: RollRequest):
-    if request.bet > request.balance:
+def roll(request: RollRequest, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    if request.bet > user.balance:
         return {"error": "Not enough credits"}
 
     win, numbers = dice_calculate_win(request.bet, request.prediction, request.num_dice)
-    new_balance = request.balance - request.bet + win
+    user.balance = user.balance - request.bet + win
+    db.commit()
 
-    return {"win": win, "numbers": numbers, "balance": new_balance}
+    return {"win": win, "numbers": numbers, "new_balance": user.balance}
 
 
 class BlackJackRequest(BaseModel):
     bet: int
-    balance: int
+    username: str
 
 
 @app.post("/blackjack/start")
-def blackjack_start(request: BlackJackRequest):
-    if request.bet > request.balance:
+def blackjack_start(request: BlackJackRequest, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    if request.bet > user.balance:
         return {"error": "Not enough credits"}
 
     game_state["deck"] = shuffle_deck()
@@ -91,6 +103,7 @@ def blackjack_start(request: BlackJackRequest):
     game_state["dealer_hand"] = [game_state["deck"].pop(0), game_state["deck"].pop(0)]
     game_state["bet"] = request.bet
     game_state["active"] = True
+    game_state["username"] = request.username
 
     return {
         "player_hand": game_state["player_hand"],
@@ -127,12 +140,12 @@ def blackjack_hit():
         }
 
 
-class BlackJackStandRequest(BaseModel):
-    balance: int
-
-
 @app.post("/blackjack/stand")
-def blackjack_stand(request: BlackJackStandRequest):
+def blackjack_stand(db=Depends(get_db)):
+    user = db.query(User).filter(User.username == game_state["username"]).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+
     game_state["dealer_hand"] = dealer_draw(
         game_state["dealer_hand"], game_state["deck"]
     )
@@ -147,7 +160,8 @@ def blackjack_stand(request: BlackJackStandRequest):
     else:
         win = 0
 
-    new_balance = request.balance - game_state["bet"] + win
+    user.balance = user.balance - game_state["bet"] + win
+    db.commit()
     game_state["active"] = False
 
     return {
@@ -156,7 +170,8 @@ def blackjack_stand(request: BlackJackStandRequest):
         "dealer_value": dealer_value,
         "dealer_hand": game_state["dealer_hand"],
         "gewinner": gewinner,
-        "balance": new_balance,
+        "win": win,
+        "new_balance": user.balance,
     }
 
 
