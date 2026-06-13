@@ -105,6 +105,10 @@
             border-color: #f0c040;
             box-shadow: 0 0 20px #f0c040, 0 0 40px rgba(240,192,64,0.35);
         }
+        .reel-container.win-glow-white {
+            border-color: #ffffff;
+            box-shadow: 0 0 20px #ffffff, 0 0 40px rgba(255,255,255,0.35);
+        }
 
         #message {
             font-size: 1.15rem;
@@ -385,7 +389,7 @@
 
             const bet = parseInt(document.getElementById("bet").value);
             document.getElementById("message").textContent = "";
-            document.querySelectorAll(".reel-container").forEach(c => c.classList.remove("win-glow"));
+            document.querySelectorAll(".reel-container").forEach(c => c.classList.remove("win-glow", "win-glow-white"));
 
             startPhase1();
 
@@ -440,10 +444,13 @@
                 })
             }
 
-            if (data.win > 0) {
+            if (data.win > bet) {
                 const net = data.win - bet;
                 document.getElementById("message").textContent = "+" + net + " Credits! 🎉";
                 document.querySelectorAll(".reel-container").forEach(c => c.classList.add("win-glow"));
+            } else if (data.win === bet) {
+                document.getElementById("message").textContent = "Einsatz zurück! 🤝";
+                document.querySelectorAll(".reel-container").forEach(c => c.classList.add("win-glow-white"));
             } else {
                 document.getElementById("message").textContent = "Kein Gewinn 😔";
             }

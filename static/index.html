@@ -124,17 +124,14 @@
                 return;
             }
             const balance = data.balance ?? 0;
-            localStorage.setItem("balance", balance);
             document.getElementById("balance").textContent = parseInt(balance).toLocaleString("de-DE");
         } catch {
-            const fallback = localStorage.getItem("balance") || 0;
-            document.getElementById("balance").textContent = parseInt(fallback).toLocaleString("de-DE");
+            document.getElementById("balance").textContent = "—";
         }
     })();
 
     window.logout = function() {
       localStorage.removeItem("username");
-      localStorage.removeItem("balance");
       window.location.href = "/static/login.html";
     };
     const grid = document.getElementById('games-grid');
@@ -190,19 +187,6 @@
     });
 
 
-   async function logout() {
-    const username = localStorage.getItem("username");
-    const balance = parseInt(localStorage.getItem("balance"));
-    
-    await fetch(`${API_URL}/update_balance`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username, new_balance: balance })
-    });
-    
-    localStorage.clear();
-    window.location.href = "/static/login.html";
-}
   </script>
   <script src="/static/murmel.js"></script>
 </body>
