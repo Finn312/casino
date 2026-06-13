@@ -548,6 +548,17 @@
             <div class="action-feedback" id="del-feedback"></div>
           </div>
 
+          <!-- Leaderboard togglen -->
+          <div class="action-panel">
+            <h3>🏆 Leaderboard togglen</h3>
+            <div class="form-group" style="margin:0">
+              <label>Spielername</label>
+              <input type="text" id="lb-player" placeholder="Username">
+            </div>
+            <button class="btn-outline" onclick="toggleLeaderboard()">Sichtbarkeit togglen</button>
+            <div class="action-feedback" id="lb-feedback"></div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -777,6 +788,27 @@
     finally { btn.disabled = false; }
   }
 
+  // ── Toggle Leaderboard ───────────────────────────────────────────────────
+
+  async function toggleLeaderboard() {
+    const player = document.getElementById("lb-player").value.trim();
+    if (!player) { setFeedback("lb-feedback", "Spielername eingeben.", false); return; }
+
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    try {
+      const { ok, data } = await adminPost("/show_in_leaderboard", { player_name: player });
+      if (ok) {
+        const status = data.show_in_leaderboard ? "sichtbar" : "ausgeblendet";
+        setFeedback("lb-feedback", `✓ "${player}" ist jetzt ${status}.`, true);
+        showToast(`${player} im Leaderboard: ${status}.`);
+      } else {
+        setFeedback("lb-feedback", data.detail || data.error || "Fehler.", false);
+      }
+    } catch { setFeedback("lb-feedback", "Server nicht erreichbar.", false); }
+    finally { btn.disabled = false; }
+  }
+
   // ── Load Users ────────────────────────────────────────────────────────────
 
   async function loadUsers() {
@@ -805,16 +837,19 @@
         <th>Balance</th>
         <th>Admin</th>
         <th>Gebannt</th>
+        <th>Leaderboard</th>
       </tr></thead><tbody>`;
 
     for (const u of users) {
       const banned = u.is_banned ?? u.id_banned ?? false;
+      const inLb = u.show_in_leaderboard ?? true;
       html += `<tr>
         <td style="color:var(--muted)">${esc(String(u.id ?? "—"))}</td>
         <td style="font-weight:600">${esc(u.username)}</td>
         <td style="color:var(--gold-light);font-weight:700">${formatBalance(u.balance)}</td>
         <td>${u.is_admin ? '<span class="badge badge-yes">Ja</span>' : '<span class="badge badge-no">Nein</span>'}</td>
         <td>${banned ? '<span class="badge badge-ban">Gebannt</span>' : '<span class="badge badge-no">Nein</span>'}</td>
+        <td>${inLb ? '<span class="badge badge-yes">Ja</span>' : '<span class="badge badge-no">Nein</span>'}</td>
       </tr>`;
     }
     html += "</tbody></table>";
