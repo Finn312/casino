@@ -109,7 +109,7 @@ def blackjack_start(request: BlackJackRequest, db=Depends(get_db)):
     game_state["username"] = request.username
     
     if hand_value(game_state["player_hand"]) == 21:
-        win = request.bet * 2.5
+        win = request.bet * 2
         user.balance = user.balance - request.bet + win
         user.total_gold_earned += win
     db.commit()
