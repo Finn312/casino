@@ -11,6 +11,6 @@ def calculate_win(reels, bet):
       return bet * 25
     return bet * 10
   if reels[0] == reels[1] or reels[1] == reels[2] or reels[0] == reels[2]:
-    return bet * 2
+    return bet 
   return 0
   
