@@ -344,7 +344,7 @@ def admin_get_users(username: str, password: str, db=Depends(get_db)):
         return {"error": "Falsches Passwort"}
 
     users = db.query(User).all()
-    return [{"username": u.username, "balance": u.balance, "is_admin": u.is_admin, "id_banned": u.id_banned} for u in users]
+    return [{"username": u.username, "balance": u.balance, "is_admin": u.is_admin, "id_banned": u.id_banned, "show_in_leaderboard": u.show_in_leaderboard} for u in users]
 
 @app.get("/admin/get_history")
 def admin_get_history(username: str, password: str, db=Depends(get_db)):
