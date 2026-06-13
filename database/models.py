@@ -25,8 +25,8 @@ class game_history(Base):
     win = Column(Boolean)
     
     
-class settings(Base):
-    __tablename__="settings"
+class Settings(Base):
+    __tablename__="Settings"
     
     username = Column(String, primary_key=True, index=True)
     murmel_enabled = Column(Boolean, default=True)

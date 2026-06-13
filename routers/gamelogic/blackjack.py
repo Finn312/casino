@@ -1,18 +1,14 @@
 import random
 
 
-    
-
-
 def build_deck():
-
   SUITS = ["♠", "♥", "♦", "♣"]
   WERT = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "Bube", "Dame", "König", "Ass"]
   
   deck = [f"{zeichen} {zahl}" for zahl in SUITS for zeichen in WERT]
   return deck
   
-  
+
 def shuffle_deck():
   deck = build_deck()
   random.shuffle(deck)
@@ -21,16 +17,15 @@ def shuffle_deck():
 
 def card_value(card):
   split_card = card.split(" ")
-  
   zahl = split_card[0]
-
   if zahl in ["Bube", "Dame", "König"]:
       return 10
   elif zahl == "Ass":
       return 11
   else:
       return int(zahl)
-    
+
+
 def hand_value(cards):
     value = 0
     asse = 0
@@ -43,6 +38,7 @@ def hand_value(cards):
         value -= 10
         asse -= 1
     return value
+
       
 def check_winner(player_hand, dealer_hand):
     if player_hand > 21:
@@ -59,7 +55,17 @@ def dealer_draw(dealer_hand, deck):
     dealer_hand.append(deck.pop(0))
   return dealer_hand
 
+
+game_state = {
+    "deck": [],
+    "player_hand": [],
+    "dealer_hand": [],
+    "bet": 0,
+    "active": False,
+    "username": "",
+}
+
+
+
   
-    
-    
     

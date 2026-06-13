@@ -7,27 +7,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-  <!-- ── Header ── -->
-  <header>
-    <a class="logo" href="#">🃏 My<span>Casino</span></a>
-
-    <nav>
-      <a href="#games">Games</a>
-      <a href="/static/leaderboard.html">Leaderboard</a>
-      <a href="/static/settings.html">Settings</a>
-    </nav>
-
-    <div class="header-right">
-      <span id="welcome-user" class="welcome-user"></span>
-      <div class="wallet">
-        <span class="wallet-icon">💰</span>
-        <span class="wallet-label">Credits</span>
-        <span class="wallet-amount" id="balance">1,000</span>
-      </div>
-      <button class="btn-logout" onclick="logout()">Logout</button>
-    </div>
-  </header>
+  <script src="/static/navbar.js"></script>
 
   <!-- ── Hero ── -->
   <section class="hero">
@@ -110,30 +90,6 @@
         window.location.href = "/static/login.html";
     }
 
-    if (savedUsername) {
-        document.getElementById("welcome-user").textContent = "Willkommen, " + savedUsername + "!";
-    }
-
-    (async () => {
-        try {
-            const res  = await fetch(`${API_URL}/get_balance?username=${encodeURIComponent(savedUsername)}`);
-            const data = await res.json();
-            if (data.id_banned) {
-                localStorage.clear();
-                window.location.href = "/static/login.html";
-                return;
-            }
-            const balance = data.balance ?? 0;
-            document.getElementById("balance").textContent = parseInt(balance).toLocaleString("de-DE");
-        } catch {
-            document.getElementById("balance").textContent = "—";
-        }
-    })();
-
-    window.logout = function() {
-      localStorage.removeItem("username");
-      window.location.href = "/static/login.html";
-    };
     const grid = document.getElementById('games-grid');
 
     GAMES.forEach(game => {

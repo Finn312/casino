@@ -112,24 +112,7 @@
   </style>
 </head>
 <body>
-
-  <header>
-    <a class="logo" href="/static/index.html">🃏 My<span>Casino</span></a>
-    <nav>
-      <a href="/static/index.html#games">Games</a>
-      <a href="/static/leaderboard.html">Leaderboard</a>
-      <a href="#">Settings</a>
-    </nav>
-    <div class="header-right">
-      <span id="welcome-user" class="welcome-user"></span>
-      <div class="wallet">
-        <span class="wallet-icon">💰</span>
-        <span class="wallet-label">Credits</span>
-        <span class="wallet-amount" id="header-balance">—</span>
-      </div>
-      <button class="btn-logout" onclick="logout()">Logout</button>
-    </div>
-  </header>
+  <script src="/static/navbar.js"></script>
 
   <main class="history-main">
     <div class="page-heading">
@@ -153,30 +136,11 @@
   </main>
 
   <script>
-    // ── Header ──
     const savedUsername = localStorage.getItem("username");
-    if (savedUsername && savedUsername !== "undefined") {
-      document.getElementById("welcome-user").textContent = "Willkommen, " + savedUsername + "!";
-    }
-    function logout() {
-      localStorage.removeItem("username");
-      window.location.href = "/static/login.html";
-    }
 
     const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
       ? "http://127.0.0.1:8000"
       : "https://finndev.me";
-
-    if (savedUsername) {
-      fetch(`${API_URL}/get_balance?username=${encodeURIComponent(savedUsername)}`)
-        .then(r => r.json())
-        .then(data => {
-          if (data.balance !== undefined) {
-            document.getElementById("header-balance").textContent = parseInt(data.balance).toLocaleString("de-DE");
-          }
-        })
-        .catch(() => {});
-    }
 
     async function GetHistory() {
       username = localStorage.getItem("username")
