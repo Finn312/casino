@@ -8,8 +8,8 @@ def spin_reels ():
 def calculate_win(reels, bet):
   if reels[0] == reels[1] == reels[2]:
     if reels[0] == "💎":
-      return bet * 25
-    return bet * 10
+      return bet * 30
+    return bet * 15
   if reels[0] == reels[1] or reels[1] == reels[2] or reels[0] == reels[2]:
     return bet 
   return 0
