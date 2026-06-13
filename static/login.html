@@ -310,7 +310,6 @@
         showError(data.error || "Login fehlgeschlagen.");
       } else {
         localStorage.setItem("username", data.username);
-        localStorage.setItem("balance", data.balance);
         window.location.href = "/static/index.html";
       }
     } catch {
@@ -344,7 +343,6 @@
         showError(data.error || "Registrierung fehlgeschlagen.");
       } else {
         localStorage.setItem("username", data.username);
-        localStorage.setItem("balance", data.balance);
         window.location.href = "/static/index.html";
       }
     } catch {

@@ -158,20 +158,25 @@
     if (savedUsername && savedUsername !== "undefined") {
       document.getElementById("welcome-user").textContent = "Willkommen, " + savedUsername + "!";
     }
-    const savedBalance = localStorage.getItem("balance");
-    if (savedBalance) {
-      document.getElementById("header-balance").textContent = parseInt(savedBalance).toLocaleString("de-DE");
-    }
     function logout() {
       localStorage.removeItem("username");
-      localStorage.removeItem("balance");
       window.location.href = "/static/login.html";
     }
 
-    // ── Original JS logic (unverändert) ──
     const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
       ? "http://127.0.0.1:8000"
       : "https://finndev.me";
+
+    if (savedUsername) {
+      fetch(`${API_URL}/get_balance?username=${encodeURIComponent(savedUsername)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.balance !== undefined) {
+            document.getElementById("header-balance").textContent = parseInt(data.balance).toLocaleString("de-DE");
+          }
+        })
+        .catch(() => {});
+    }
 
     async function GetHistory() {
       username = localStorage.getItem("username")

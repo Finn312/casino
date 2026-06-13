@@ -247,8 +247,8 @@
     ? "http://127.0.0.1:8000"
     : "https://finndev.me";
 
-  const _stored = localStorage.getItem("balance");
-  let balance = (_stored !== null && !isNaN(parseInt(_stored))) ? parseInt(_stored) : 1000;
+  const username = localStorage.getItem("username");
+  let balance = 0;
 
   const REWARDS = {
     daily:  { key: 'lastDaily',  cooldown: 24 * 60 * 60 * 1000, amount: 100 },
@@ -328,7 +328,6 @@
       : reward.amount;
 
     balance += gained;
-    localStorage.setItem("balance", balance);
     localStorage.setItem(reward.key, Date.now().toString());
 
     // animate amount for lucky spin
@@ -344,21 +343,28 @@
     showToast(`+${gained} Credits eingesammelt! 🎉`);
     refreshCards();
 
-    // sync with server
     try {
       await fetch(`${API_URL}/update_balance`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ balance })
+        body: JSON.stringify({ username, new_balance: balance })
       });
-    } catch { /* silent fail — localStorage already updated */ }
+    } catch {}
   }
 
-  // live countdown tick
   setInterval(refreshCards, 1000);
 
-  updateBalanceDisplay();
-  refreshCards();
+  (async () => {
+    if (!username) { window.location.href = "/static/login.html"; return; }
+    try {
+      const res  = await fetch(`${API_URL}/get_balance?username=${encodeURIComponent(username)}`);
+      const data = await res.json();
+      if (data.id_banned) { localStorage.removeItem("username"); window.location.href = "/static/login.html"; return; }
+      balance = data.balance ?? 0;
+    } catch {}
+    updateBalanceDisplay();
+    refreshCards();
+  })();
 </script>
 </body>
 </html>
