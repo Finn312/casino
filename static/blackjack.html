@@ -543,7 +543,7 @@
         window.location.href = "/static/login.html";
         return;
       }
-      balance = data.balance;
+      balance = data.new_balance;
       if (data.total_gold_earned !== undefined) {
           localStorage.setItem("total_gold_earned", data.total_gold_earned);
           localStorage.setItem("level", data.level);
