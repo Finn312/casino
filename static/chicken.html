@@ -357,6 +357,30 @@
         .chip:hover:not([disabled]) { transform: translateY(-3px) scale(1.07); }
         .chip.active { border-color: #f0c040; box-shadow: 0 0 0 3px rgba(240,192,64,0.35), 0 6px 18px rgba(0,0,0,0.7); }
         .chip[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+        .custom-bet-wrap {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .custom-bet-input {
+            background: #1a1a24;
+            border: 1.5px solid #f0c040;
+            border-radius: 8px;
+            color: #f0c040;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            width: 140px;
+            text-align: center;
+            outline: none;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        .custom-bet-input::-webkit-outer-spin-button,
+        .custom-bet-input::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+        .custom-bet-input:focus { box-shadow: 0 0 0 3px rgba(240,192,64,0.25); }
         .chip-blue   { background: linear-gradient(160deg,#1565c0,#1e88e5); }
         .chip-green  { background: linear-gradient(160deg,#2e7d32,#43a047); }
         .chip-orange { background: linear-gradient(160deg,#bf360c,#fb8c00); }
@@ -426,11 +450,14 @@
         <div class="controls">
             <div class="bet-section">
                 <span class="bet-label">Einsatz</span>
-                <div class="chips">
+                <div class="chips" id="chips-row">
                     <button class="chip chip-blue active" onclick="selectChip(this,10)">10</button>
                     <button class="chip chip-green" onclick="selectChip(this,25)">25</button>
                     <button class="chip chip-orange" onclick="selectChip(this,50)">50</button>
                     <button class="chip chip-red" onclick="selectChip(this,100)">100</button>
+                </div>
+                <div class="custom-bet-wrap" id="custom-bet-wrap">
+                    <input type="number" class="custom-bet-input" id="custom-bet" min="1" value="10">
                 </div>
             </div>
 
@@ -863,6 +890,23 @@
                 document.getElementById('balance-display').textContent = 'Fehler beim Laden';
                 return;
             }
+            try {
+                const sRes  = await fetch(`${API_URL}/get_settings?username=${encodeURIComponent(username)}`);
+                const sData = await sRes.json();
+                if (!sData.error && sData.custom_input) {
+                    document.getElementById('custom-bet-wrap').style.display = 'flex';
+                    document.getElementById('chips-row').style.display = 'none';
+                    const customBetEl = document.getElementById('custom-bet');
+                    bet = parseInt(customBetEl.value) || 10;
+                    updateCashOut();
+                    customBetEl.addEventListener('input', () => {
+                        if (!gameActive) {
+                            bet = parseInt(customBetEl.value) || 1;
+                            updateCashOut();
+                        }
+                    });
+                }
+            } catch {}
             setChickenTransition(false);
             renderRoad();
             document.getElementById('chicken').getBoundingClientRect();

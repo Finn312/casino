@@ -234,6 +234,30 @@
         .btn-save:hover { box-shadow: 0 5px 20px rgba(240,192,64,0.45); transform: translateY(-1px); }
         .btn-save:active { transform: translateY(0); }
         .btn-save:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1e1e28;
+            border: 1px solid #f0c040;
+            color: #f0c040;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            z-index: 9999;
+            white-space: nowrap;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -290,11 +314,29 @@
             </div>
         </div>
 
+        <div class="section-label" style="margin-top: 2rem;">🎮 Gameplay</div>
+
+        <!-- Custom Bet Toggle -->
+        <div class="setting-row">
+            <div class="setting-info">
+                <span class="setting-name">Custom Bet</span>
+                <span class="setting-desc">Eigenen Wetteinsatz eingeben (ab Level 5)</span>
+            </div>
+            <div class="toggle-wrap">
+                <label class="toggle">
+                    <input type="checkbox" id="custom-input">
+                    <span class="toggle-track"></span>
+                </label>
+            </div>
+        </div>
+
         <div class="save-wrap">
             <span class="save-msg" id="save-msg"></span>
             <button class="btn-save" id="save-btn" onclick="saveSettings()">Speichern</button>
         </div>
     </div>
+
+    <div class="toast" id="toast"></div>
 
     <script src="/static/murmel.js"></script>
     <script>
@@ -305,13 +347,14 @@
         const username = localStorage.getItem("username");
         if (!username) window.location.href = "/static/login.html";
 
-        const enabledEl  = document.getElementById("murmel-enabled");
-        const intervalEl = document.getElementById("murmel-interval");
-        const durationEl = document.getElementById("murmel-duration");
-        const intervalVal = document.getElementById("interval-val");
-        const durationVal = document.getElementById("duration-val");
-        const saveMsg    = document.getElementById("save-msg");
-        const saveBtn    = document.getElementById("save-btn");
+        const enabledEl    = document.getElementById("murmel-enabled");
+        const intervalEl   = document.getElementById("murmel-interval");
+        const durationEl   = document.getElementById("murmel-duration");
+        const intervalVal  = document.getElementById("interval-val");
+        const durationVal  = document.getElementById("duration-val");
+        const saveMsg      = document.getElementById("save-msg");
+        const saveBtn      = document.getElementById("save-btn");
+        const customInputEl = document.getElementById("custom-input");
 
         // Live-Anzeige für Slider
         intervalEl.addEventListener("input", () => {
@@ -319,6 +362,21 @@
         });
         durationEl.addEventListener("input", () => {
             durationVal.textContent = durationEl.value + " s";
+        });
+
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.textContent = msg;
+            t.classList.add("show");
+            setTimeout(() => t.classList.remove("show"), 2500);
+        }
+
+        customInputEl.addEventListener("change", () => {
+            const level = parseInt(localStorage.getItem("level") || "0");
+            if (customInputEl.checked && level < 5) {
+                customInputEl.checked = false;
+                showToast("Erreiche Level 5 um diese Funktion freizuschalten");
+            }
         });
 
         // Settings laden
@@ -329,11 +387,12 @@
                 const data = await res.json();
                 if (data.error) throw new Error();
 
-                enabledEl.checked     = data.murmel_enabled  ?? true;
-                intervalEl.value      = data.murmel_interval  ?? 60;
-                durationEl.value      = data.murmel_duration  ?? 5;
+                enabledEl.checked       = data.murmel_enabled  ?? true;
+                intervalEl.value        = data.murmel_interval  ?? 60;
+                durationEl.value        = data.murmel_duration  ?? 5;
                 intervalVal.textContent = intervalEl.value + " s";
                 durationVal.textContent = durationEl.value + " s";
+                customInputEl.checked   = data.custom_input ?? false;
             } catch {
                 // Standardwerte bereits gesetzt
             }
@@ -354,6 +413,7 @@
                         murmel_enabled:  enabledEl.checked,
                         murmel_interval: parseInt(intervalEl.value),
                         murmel_duration: parseInt(durationEl.value),
+                        custom_input:    customInputEl.checked,
                     })
                 });
                 if (!res.ok) throw new Error();

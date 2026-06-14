@@ -20,9 +20,10 @@ def leaderboard(db=Depends(get_db)):
     leaderboard_users = (
         db.query(User)
         .filter(
-            User.show_in_leaderboard == True,
+            User.show_leaderboard == True,
             User.id_banned == False,
             User.is_admin == False,
+            User.total_gold_earned >= 2000,
         )
         .order_by(User.balance.desc())
         .limit(10)
@@ -133,6 +134,7 @@ def get_settings(username: str, db=Depends(get_db)):
         "murmel_enabled": settings.murmel_enabled,
         "murmel_interval": settings.murmel_interval,
         "murmel_duration": settings.murmel_duration,
+        "custom_input": settings.custom_input,
     }
 
 
@@ -146,11 +148,13 @@ def update_settings(request: UpdateSettingsRequest, db=Depends(get_db)):
             murmel_enabled=request.murmel_enabled,
             murmel_interval=request.murmel_interval,
             murmel_duration=request.murmel_duration,
+            custom_input=request.custom_input,
         )
         db.add(settings)
     else:
         settings.murmel_enabled = request.murmel_enabled
         settings.murmel_interval = request.murmel_interval
         settings.murmel_duration = request.murmel_duration
+        settings.custom_input = request.custom_input
     db.commit()
     return {"message": "Settings updated"}

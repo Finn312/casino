@@ -258,6 +258,25 @@
 
     label { color: #999; font-size: 0.95rem; }
 
+    .custom-bet-input {
+      display: none;
+      background: #1a1a24;
+      border: 1.5px solid #f0c040;
+      border-radius: 8px;
+      color: #f0c040;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 0.6rem 1rem;
+      width: 120px;
+      text-align: center;
+      outline: none;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    .custom-bet-input::-webkit-outer-spin-button,
+    .custom-bet-input::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+    .custom-bet-input:focus { box-shadow: 0 0 0 3px rgba(240,192,64,0.25); }
+
     .back-link {
       color: #f0c040;
       margin-top: 1.5rem;
@@ -302,13 +321,14 @@
       <button id="stand_button" onclick="stand()">Stand</button>
     </div>
     <div id="start-ctrl">
-      <label>Einsatz:</label>
+      <label id="bet-label">Einsatz:</label>
       <select id="bet">
         <option value="10">10</option>
         <option value="25">25</option>
         <option value="50">50</option>
         <option value="100">100</option>
       </select>
+      <input type="number" class="custom-bet-input" id="custom-bet" min="1" value="10">
       <button id="start-btn" class="btn-start" disabled onclick="startGame()">Spiel Starten</button>
     </div>
   </div>
@@ -397,8 +417,13 @@
 
   // ── game functions (API calls identical to original) ─────────
 
+  function getActiveBet() {
+    const ci = document.getElementById('custom-bet');
+    return ci.style.display !== 'none' ? (parseInt(ci.value) || 1) : parseInt(document.getElementById('bet').value);
+  }
+
   async function startGame() {
-    const bet = parseInt(document.getElementById("bet").value);
+    const bet = getActiveBet();
     const response = await fetch(`${API_URL}/blackjack/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -432,32 +457,29 @@
   }
 
   async function hit() {
-    if (!game_state) return;
-    const response = await fetch(`${API_URL}/blackjack/hit`, {
-      method: "POST"
-    });
-    const data = await response.json();
-    if (response.ok) {
-      // only append the newest card so existing ones don't re-animate
-      const newCard = data.player_hand[data.player_hand.length - 1];
-      document.getElementById("player-cards").insertAdjacentHTML("beforeend", cardHTML(newCard, 0));
-      document.getElementById("player-value").textContent = "Wert: " + data.player_value;
+      if (!game_state) return;
+      const response = await fetch(`${API_URL}/blackjack/hit`, {
+          method: "POST"
+      });
+      const data = await response.json();
+      if (response.ok) {
+          const newCard = data.player_hand[data.player_hand.length - 1];
+          document.getElementById("player-cards").insertAdjacentHTML("beforeend", cardHTML(newCard, 0));
+          document.getElementById("player-value").textContent = "Wert: " + data.player_value;
 
-      document.getElementById("game").textContent =
-        `Player Hand: ${data.player_hand.join(", ")} (Value: ${data.player_value}) | Dealer: ?`;
+          document.getElementById("game").textContent =
+              `Player Hand: ${data.player_hand.join(", ")} (Value: ${data.player_value}) | Dealer: ?`;
 
-      if (data.result === "bust") {
-        game_state = false;
-        setPhase("over");
-        showResult("Bust! 💥", "bust");
-      } else if (data.result === "blackjack") {
-        game_state = false;
-        setPhase("over");
-        showResult("Blackjack! 🎉", "win");
+          if (data.result === "bust") {
+              game_state = false;
+              setPhase("over");
+              showResult("Bust! 💥", "bust");
+          } else if (data.result === "blackjack") {
+              setTimeout(stand, 900);
+          }
+      } else {
+          showResult(data.error || "Fehler", "lose");
       }
-    } else {
-      showResult(data.error || "Fehler", "lose");
-    }
   }
 
   async function stand() {
@@ -533,6 +555,15 @@
       return;
     }
     document.getElementById("balance").textContent = "Credits: " + balance;
+    try {
+        const sRes  = await fetch(`${API_URL}/get_settings?username=${encodeURIComponent(username)}`);
+        const sData = await sRes.json();
+        if (!sData.error && sData.custom_input) {
+            document.getElementById('bet').style.display = 'none';
+            document.getElementById('bet-label').style.display = 'none';
+            document.getElementById('custom-bet').style.display = 'inline-block';
+        }
+    } catch {}
   })();
 </script>
 <script src="/static/murmel.js"></script>

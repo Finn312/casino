@@ -69,4 +69,5 @@ class UpdateSettingsRequest(BaseModel):
     murmel_enabled: bool
     murmel_interval: int
     murmel_duration: int
+    custom_input: bool
     

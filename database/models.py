@@ -32,5 +32,6 @@ class Settings(Base):
     murmel_enabled = Column(Boolean, default=True)
     murmel_interval = Column(Integer, default=60)
     murmel_duration = Column(Integer, default=5)    
+    custom_input = Column(Boolean, default=False)
     
 

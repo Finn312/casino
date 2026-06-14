@@ -227,6 +227,30 @@
             background: rgba(240,192,64,0.08);
             border-color: #f0c040;
         }
+
+        .custom-bet-wrap {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .custom-bet-input {
+            background: #1a1a24;
+            border: 1.5px solid #f0c040;
+            border-radius: 8px;
+            color: #f0c040;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            width: 140px;
+            text-align: center;
+            outline: none;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        .custom-bet-input::-webkit-outer-spin-button,
+        .custom-bet-input::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+        .custom-bet-input:focus { box-shadow: 0 0 0 3px rgba(240,192,64,0.25); }
     </style>
 </head>
 <body>
@@ -247,13 +271,16 @@
         <div class="controls">
             <div class="bet-section">
                 <span class="bet-label">Einsatz</span>
-                <div class="chips">
+                <div class="chips" id="chips-row">
                     <button class="chip chip-blue active" onclick="selectChip(this, 10)">10</button>
                     <button class="chip chip-green" onclick="selectChip(this, 25)">25</button>
                     <button class="chip chip-orange" onclick="selectChip(this, 50)">50</button>
                     <button class="chip chip-red" onclick="selectChip(this, 100)">100</button>
                 </div>
                 <input type="hidden" id="bet" value="10">
+                <div class="custom-bet-wrap" id="custom-bet-wrap">
+                    <input type="number" class="custom-bet-input" id="custom-bet" min="1" value="10">
+                </div>
             </div>
             <div class="action-btns">
                 <button class="spin-btn" id="spin-btn" disabled onclick="spin()">Drehen!</button>
@@ -480,6 +507,17 @@
                 return;
             }
             initReels();
+            try {
+                const sRes  = await fetch(`${API_URL}/get_settings?username=${encodeURIComponent(username)}`);
+                const sData = await sRes.json();
+                if (!sData.error && sData.custom_input) {
+                    document.getElementById('custom-bet-wrap').style.display = 'flex';
+                    document.getElementById('chips-row').style.display = 'none';
+                    document.getElementById('custom-bet').addEventListener('input', () => {
+                        document.getElementById('bet').value = parseInt(document.getElementById('custom-bet').value) || 1;
+                    });
+                }
+            } catch {}
         })();
     </script>
     <script src="/static/murmel.js"></script>
