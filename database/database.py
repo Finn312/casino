@@ -2,7 +2,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///database/casino.db")
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///data/casino.db")
 
 
 
