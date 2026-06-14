@@ -141,7 +141,7 @@ def get_settings(username: str, db=Depends(get_db)):
 def update_settings(request: UpdateSettingsRequest, db=Depends(get_db)):
     settings = db.query(models.Settings).filter(models.Settings.username == request.username).first()
     if not settings:
-        settings = models.settings(
+        settings = models.Settings(
             username=request.username,
             murmel_enabled=request.murmel_enabled,
             murmel_interval=request.murmel_interval,
