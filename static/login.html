@@ -312,6 +312,16 @@
         localStorage.setItem("username", data.username);
         localStorage.setItem("level", data.level);
         localStorage.setItem("total_gold_earned", data.total_gold_earned ?? 0);
+        try {
+          const dailyRes = await fetch(`${API_URL}/get_dayle_status?username=${encodeURIComponent(data.username)}`);
+          const dailyData = await dailyRes.json();
+          if (dailyData.can_spin !== undefined) {
+            localStorage.setItem("can_spin", dailyData.can_spin);
+            if (dailyData.remaining_time) {
+              localStorage.setItem("daily_remaining", Math.floor(dailyData.remaining_time));
+            }
+          }
+        } catch(dailyErr) {}
         window.location.href = "/static/index.html";
       }
     } catch {
@@ -345,6 +355,16 @@
         showError(data.error || "Registrierung fehlgeschlagen.");
       } else {
         localStorage.setItem("username", data.username);
+        try {
+          const dailyRes = await fetch(`${API_URL}/get_dayle_status?username=${encodeURIComponent(data.username)}`);
+          const dailyData = await dailyRes.json();
+          if (dailyData.can_spin !== undefined) {
+            localStorage.setItem("can_spin", dailyData.can_spin);
+            if (dailyData.remaining_time) {
+              localStorage.setItem("daily_remaining", Math.floor(dailyData.remaining_time));
+            }
+          }
+        } catch(dailyErr) {}
         window.location.href = "/static/index.html";
       }
     } catch {

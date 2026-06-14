@@ -71,3 +71,6 @@ class UpdateSettingsRequest(BaseModel):
     murmel_duration: int
     custom_input: bool
     
+
+class DailyRequest(BaseModel):
+    username: str

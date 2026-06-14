@@ -29,6 +29,26 @@
   <!-- ── Toast ── -->
   <div class="toast" id="toast"></div>
 
+  <!-- ── Daily Bonus Popup ── -->
+  <div class="daily-overlay" id="dailyOverlay">
+    <div class="daily-popup" id="dailyPopup">
+      <button class="daily-close" id="dailyClose" aria-label="Schließen">✕</button>
+      <div class="daily-body" id="dailyBody">
+        <div class="daily-title">Täglicher Bonus</div>
+        <div class="daily-gift" id="dailyGift">🎁</div>
+        <div class="daily-hint">Klicke auf die Geschenkbox!</div>
+      </div>
+      <div class="daily-coins" id="dailyCoins"></div>
+      <div class="daily-result" id="dailyResult"></div>
+    </div>
+  </div>
+
+  <!-- ── Daily Bonus Countdown (when already claimed) ── -->
+  <div class="daily-banner" id="dailyBanner" style="display:none">
+    <span>🎁</span>
+    <span>Nächster Bonus in <strong id="dailyCountdown"></strong></span>
+  </div>
+
   <!-- ── Footer ── -->
   <footer>
     <div class="footer-logo">🃏 My<span>Casino</span></div>
@@ -39,6 +59,112 @@
       <a href="#">GitHub</a>
     </div>
   </footer>
+
+  <style>
+    /* ── Daily Bonus Overlay ── */
+    .daily-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .daily-overlay.show { opacity: 1; pointer-events: all; }
+
+    .daily-popup {
+      position: relative;
+      background: var(--surface);
+      border: 1.5px solid var(--gold-dim);
+      border-radius: 18px;
+      padding: 2.2rem 2.5rem 2rem;
+      min-width: 300px; max-width: 360px;
+      text-align: center;
+      box-shadow: 0 0 48px rgba(201,149,42,0.25), 0 8px 40px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+
+    .daily-close {
+      position: absolute; top: 0.9rem; right: 1.1rem;
+      background: none; border: none;
+      color: var(--muted); font-size: 1.1rem;
+      cursor: pointer; line-height: 1;
+      transition: color 0.15s;
+    }
+    .daily-close:hover { color: var(--text); }
+
+    .daily-title {
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+      margin-bottom: 1.2rem;
+    }
+
+    .daily-gift {
+      font-size: 4.5rem; cursor: pointer;
+      display: inline-block;
+      transition: transform 0.15s;
+      user-select: none;
+    }
+    .daily-gift:hover { transform: scale(1.12); }
+    .daily-gift.clicked { animation: giftPop 0.35s ease; }
+
+    @keyframes giftPop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.28); }
+      70%  { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+
+    .daily-hint {
+      margin-top: 0.9rem;
+      color: var(--muted); font-size: 0.88rem;
+    }
+
+    /* ── Coin burst ── */
+    .daily-coins { position: absolute; inset: 0; pointer-events: none; }
+
+    .coin {
+      position: absolute;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #f5d87a, #c9952a);
+      box-shadow: 0 0 6px rgba(201,149,42,0.8);
+      animation: coinFly var(--dur, 0.9s) ease-out forwards;
+      left: var(--x, 50%);
+      top: var(--y, 50%);
+    }
+
+    @keyframes coinFly {
+      0%   { transform: translate(0,0) scale(1); opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0.5); opacity: 0; }
+    }
+
+    /* ── Result text ── */
+    .daily-result {
+      font-size: 1.25rem; font-weight: 700;
+      color: var(--gold-light);
+      min-height: 2rem;
+      margin-top: 1rem;
+      opacity: 0;
+      transition: opacity 0.4s 0.5s;
+    }
+    .daily-result.show { opacity: 1; }
+
+    /* ── Daily banner (next bonus countdown) ── */
+    .daily-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.6rem 1.2rem;
+      margin: 0.8rem auto 0;
+      max-width: 340px;
+      display: flex; align-items: center; gap: 0.6rem;
+      color: var(--muted); font-size: 0.9rem;
+    }
+    .daily-banner strong { color: var(--gold-light); }
+  </style>
 
   <script>
     const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
@@ -151,8 +277,117 @@
           return;
       }
       showToast(`${btn.dataset.game} — Coming soon!`);
-});
+    });
 
+    // ── Daily Bonus ──────────────────────────────────────────────
+    const dailyOverlay = document.getElementById('dailyOverlay');
+    const dailyClose   = document.getElementById('dailyClose');
+    const dailyGift    = document.getElementById('dailyGift');
+    const dailyCoins   = document.getElementById('dailyCoins');
+    const dailyResult  = document.getElementById('dailyResult');
+    const dailyHint    = document.querySelector('.daily-hint');
+    const dailyBanner  = document.getElementById('dailyBanner');
+    const dailyCountdown = document.getElementById('dailyCountdown');
+
+    let countdownInterval = null;
+
+    function openDailyPopup() {
+      dailyOverlay.classList.add('show');
+    }
+
+    function closeDailyPopup() {
+      dailyOverlay.classList.remove('show');
+    }
+
+    dailyClose.addEventListener('click', closeDailyPopup);
+    dailyOverlay.addEventListener('click', e => {
+      if (e.target === dailyOverlay) closeDailyPopup();
+    });
+
+    function spawnCoins() {
+      dailyCoins.innerHTML = '';
+      const rect = dailyGift.getBoundingClientRect();
+      const popupRect = document.getElementById('dailyPopup').getBoundingClientRect();
+      const cx = rect.left - popupRect.left + rect.width / 2;
+      const cy = rect.top  - popupRect.top  + rect.height / 2;
+      const count = 18;
+      for (let i = 0; i < count; i++) {
+        const coin = document.createElement('div');
+        coin.className = 'coin';
+        const angle = (360 / count) * i + Math.random() * 20 - 10;
+        const dist  = 70 + Math.random() * 60;
+        const rad   = angle * Math.PI / 180;
+        const tx    = Math.cos(rad) * dist;
+        const ty    = Math.sin(rad) * dist - 40;
+        coin.style.cssText = `--x:${cx}px; --y:${cy}px; --tx:${tx}px; --ty:${ty}px; --dur:${0.7 + Math.random()*0.4}s`;
+        dailyCoins.appendChild(coin);
+      }
+    }
+
+    function startCountdown(seconds) {
+      function fmt(s) {
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        return h > 0 ? `${h}h ${m}m` : `${m}m`;
+      }
+      dailyBanner.style.display = 'flex';
+      dailyCountdown.textContent = fmt(seconds);
+      countdownInterval = setInterval(() => {
+        seconds -= 1;
+        if (seconds <= 0) { clearInterval(countdownInterval); dailyBanner.style.display = 'none'; return; }
+        dailyCountdown.textContent = fmt(seconds);
+      }, 1000);
+    }
+
+    async function claimDailyBonus() {
+      dailyGift.classList.add('clicked');
+      dailyGift.style.pointerEvents = 'none';
+      dailyHint.textContent = '';
+      setTimeout(() => dailyGift.classList.remove('clicked'), 350);
+      spawnCoins();
+      try {
+        const res = await fetch(`${API_URL}/daily_spin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: savedUsername })
+        });
+        const data = await res.json();
+        if (data.reward !== undefined) {
+          dailyResult.textContent = `Du hast ${data.reward} Gold gewonnen! 🎉`;
+          dailyResult.classList.add('show');
+          if (data.new_balance !== undefined) {
+            localStorage.setItem('balance', data.new_balance);
+          }
+          setTimeout(closeDailyPopup, 3000);
+          startCountdown(24 * 3600);
+        } else {
+          dailyResult.textContent = data.error || 'Fehler beim Einlösen.';
+          dailyResult.classList.add('show');
+        }
+      } catch {
+        dailyResult.textContent = 'Verbindungsfehler.';
+        dailyResult.classList.add('show');
+      }
+    }
+
+    dailyGift.addEventListener('click', claimDailyBonus);
+
+    function checkDailyStatus() {
+      const canSpin = localStorage.getItem("can_spin");
+      if (canSpin === "true") {
+        localStorage.removeItem("can_spin");
+        localStorage.removeItem("daily_remaining");
+        openDailyPopup();
+      } else if (canSpin === "false") {
+        localStorage.removeItem("can_spin");
+        const remaining = parseInt(localStorage.getItem("daily_remaining")) || 0;
+        localStorage.removeItem("daily_remaining");
+        if (remaining > 0) startCountdown(remaining);
+      }
+    }
+
+    checkDailyStatus();
+    window.checkDailyStatus = checkDailyStatus;
   </script>
   <script src="/static/murmel.js"></script>
 </body>

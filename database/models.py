@@ -1,5 +1,5 @@
 
-from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy import Boolean, Column, Integer, String, DateTime
 from database.database import Base
 
 class User(Base):
@@ -13,6 +13,7 @@ class User(Base):
     id_banned = Column(Boolean, default=False)
     show_in_leaderboard = Column(Boolean, default=True)
     total_gold_earned = Column(Integer, default=0)
+    last_dayle = Column(DateTime)
     
 class game_history(Base):
     __tablename__="game_history"

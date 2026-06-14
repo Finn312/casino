@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chicken Road</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -430,6 +431,28 @@
         .go-btn:hover:not([disabled]) { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(240,192,64,0.45); }
         .go-btn:active:not([disabled]) { transform: translateY(0); }
         .go-btn[disabled] { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+        @media (max-width: 768px) {
+            body { padding: 1rem 0.5rem; }
+            .wrapper { padding: 1.25rem 0.75rem 1.75rem; border-radius: 16px; }
+            h1 { font-size: 1.4rem; }
+            #balance-display { font-size: 0.95rem; margin-bottom: 1rem; }
+
+            .road-area { height: 180px; }
+            .mult-bubble { width: 40px; height: 40px; font-size: 0.6rem; }
+            .mult-bubble.coin, .mult-bubble.skull { font-size: 1.2rem; }
+            .lane-arch { height: 46px; }
+            .plank { height: 44px; }
+
+            .chips { gap: 0.5rem; }
+            .chip { width: 50px; height: 50px; font-size: 0.8rem; }
+            .chip::after { inset: 5px; }
+
+            .bottom-row { gap: 0.75rem; }
+            .diff-btn { padding: 0.45rem 0.8rem; font-size: 0.76rem; }
+            .cashout-btn { min-height: 48px; font-size: 0.82rem; padding: 0.6rem 1rem; min-width: 100px; }
+            .go-btn { min-height: 48px; font-size: 1rem; padding: 0.6rem 1.5rem; }
+        }
     </style>
 </head>
 <body>

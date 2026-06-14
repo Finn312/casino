@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dice Game</title>
     <style>
         body {
@@ -207,6 +208,28 @@
 
         .dice-face.rolling {
             animation: diceRoll 0.5s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+                font-size: 0.95rem;
+            }
+            h1 { font-size: 1.4rem; }
+            #balance, #message { font-size: 1rem; }
+
+            #würfel { gap: 0.75rem; padding: 1rem 1.25rem; min-width: unset; }
+            .dice-face { width: 64px; height: 64px; padding: 7px; gap: 3px; border-radius: 10px; }
+
+            .chips { gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+            .chip { width: 50px; height: 50px; font-size: 0.8rem; }
+            .chip::after { inset: 5px; }
+
+            select { min-height: 44px; padding: 0.5rem 0.75rem; }
+            button { min-height: 44px; }
+
+            .pred-grid { max-width: 280px; }
+            .pred-btn { padding: 0.4rem 0.6rem; font-size: 0.82rem; }
         }
     </style>
 </head>

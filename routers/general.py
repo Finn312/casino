@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends
 from database.database import get_db
 from database.models import User, game_history, Settings
-from core.schemas import UpdateBalanceRequest, SaveHistoryRequest, AskMurmelRequest, UpdateSettingsRequest
+from core.schemas import UpdateBalanceRequest, SaveHistoryRequest, AskMurmelRequest, UpdateSettingsRequest, DailyRequest
 from database import models
 import requests
 from core.utilities import calculate_level
 from dotenv import load_dotenv
 import os
-
+from datetime import datetime
+import random
 
 load_dotenv("/Users/finn/Desktop/Casino/.env")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -158,3 +159,30 @@ def update_settings(request: UpdateSettingsRequest, db=Depends(get_db)):
         settings.custom_input = request.custom_input
     db.commit()
     return {"message": "Settings updated"}
+
+
+
+@router.post("/daily_spin")
+def daily_spin(request: DailyRequest, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    if user.last_dayle and (datetime.utcnow() - user.last_dayle).total_seconds() < 24 * 3600:
+        return {"error": "Du kannst nur einmal alle 24 Stunden drehen"}
+    reward = random.randint(500, 1000)
+    user.balance += reward
+    user.last_dayle = datetime.utcnow()
+    db.commit()
+    return {"message": f"Du hast {reward} Gold gewonnen!", "new_balance": user.balance, "reward": reward}
+
+
+
+@router.get("/get_dayle_status")
+def get_dayle_status(username: str, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    if user.last_dayle and (datetime.utcnow() - user.last_dayle).total_seconds() < 24 * 3600:
+        remaining_time = 24 * 3600 - (datetime.utcnow() - user.last_dayle).total_seconds()
+        return {"can_spin": False, "remaining_time": remaining_time}
+    return {"can_spin": True, "remaining_time": 0}

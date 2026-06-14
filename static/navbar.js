@@ -227,6 +227,63 @@
     }
     #nv-level-table tr.nv-row-locked td { color: #3e3e4e; }
     #nv-level-table tr:last-child td { border-bottom: none; }
+
+    /* ── Hamburger & Mobile Menu ── */
+    .nv-hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: #7a7a8c;
+      cursor: pointer;
+      padding: 0.3rem 0.4rem;
+      border-radius: 6px;
+      line-height: 1;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+    }
+    .nv-hamburger:hover { color: #e8e8ee; background: #2a2a32; }
+
+    #nv-mobile-menu {
+      display: none;
+      position: fixed;
+      top: 60px; left: 0; right: 0;
+      background: #1a1a22;
+      border-bottom: 1px solid #2a2a32;
+      z-index: 8998;
+      padding: 0.4rem 0.75rem 0.65rem;
+      flex-direction: column;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+    }
+    #nv-mobile-menu.open { display: flex; }
+    #nv-mobile-menu a {
+      color: #7a7a8c;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
+      display: block;
+    }
+    #nv-mobile-menu a:hover { color: #e8e8ee; background: #2a2a32; }
+
+    @media (max-width: 768px) {
+      html, body { overflow-x: hidden; }
+      #buzz-navbar { padding: 0 0.6rem; gap: 0.35rem; }
+      .nv-logo { font-size: 0.95rem; }
+      .nv-level-inner { padding: 0.2rem 0.5rem; gap: 0.3rem; max-width: none; }
+      .nv-progress-xp { display: none; }
+      .nv-nav { display: none; }
+      .nv-hamburger { display: flex; }
+      .nv-wallet { padding: 0.22rem 0.5rem; font-size: 0.73rem; gap: 0.25rem; }
+      .nv-logout { padding: 0.22rem 0.5rem; font-size: 0.73rem; }
+    }
+    @media (max-width: 400px) {
+      .nv-level-num { font-size: 0.68rem; }
+      .nv-wallet-amount { font-size: 0.73rem; }
+    }
   `;
   document.head.appendChild(style);
 
@@ -255,10 +312,21 @@
         <span class="nv-wallet-amount" id="nv-balance">—</span>
       </div>
       <button class="nv-logout" id="nv-logout">Logout</button>
+      <button class="nv-hamburger" id="nv-hamburger" aria-label="Menü öffnen">☰</button>
     </div>
   `;
   document.body.prepend(header);
   document.body.style.paddingTop = '60px';
+
+  // ── Mobile Menu ──
+  const mobileMenu = document.createElement('div');
+  mobileMenu.id = 'nv-mobile-menu';
+  mobileMenu.innerHTML = `
+    <a href="/static/index.html#games">Games</a>
+    <a href="/static/leaderboard.html">Leaderboard</a>
+    <a href="/static/settings.html">Settings</a>
+  `;
+  document.body.insertBefore(mobileMenu, document.body.children[1] || null);
 
   // ── Modal HTML ──
   const overlay = document.createElement('div');
@@ -359,6 +427,20 @@
   });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') overlay.classList.remove('open');
+  });
+
+  // ── Hamburger ──
+  document.getElementById('nv-hamburger').addEventListener('click', e => {
+    e.stopPropagation();
+    mobileMenu.classList.toggle('open');
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#buzz-navbar') && !e.target.closest('#nv-mobile-menu')) {
+      mobileMenu.classList.remove('open');
+    }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') mobileMenu.classList.remove('open');
   });
 
   // ── Logout ──

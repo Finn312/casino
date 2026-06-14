@@ -258,6 +258,16 @@
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
+
+        @media (max-width: 768px) {
+            body { padding: 1.5rem 0.75rem 4rem; }
+            .card { padding: 1.5rem; }
+            .setting-row { flex-wrap: wrap; gap: 0.75rem; }
+            .slider-wrap { min-width: 100%; }
+            input[type="range"] { width: 100%; }
+            .save-wrap { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+            .btn-save { width: 100%; min-height: 48px; text-align: center; }
+        }
     </style>
 </head>
 <body>
