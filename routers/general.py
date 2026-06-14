@@ -169,7 +169,9 @@ def daily_spin(request: DailyRequest, db=Depends(get_db)):
         return {"error": "Nutzer nicht gefunden"}
     if user.last_dayle and (datetime.utcnow() - user.last_dayle).total_seconds() < 24 * 3600:
         return {"error": "Du kannst nur einmal alle 24 Stunden drehen"}
-    reward = random.randint(500, 1000)
+    level = calculate_level(user.total_gold_earned)
+    base = 500 + (level * 500)
+    reward = random.randint(base, base * 3)
     user.balance += reward
     user.last_dayle = datetime.utcnow()
     db.commit()
