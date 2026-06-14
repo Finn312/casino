@@ -71,14 +71,20 @@ def blackjack_start(request: BlackJackRequest, db=Depends(get_db)):
     
 #Blackjack Hit Endpoint
 @router.post("/blackjack/hit")
-def blackjack_hit():
+def blackjack_hit(db=Depends(get_db)):
     game_state["player_hand"].append(game_state["deck"].pop(0))
     if hand_value(game_state["player_hand"]) > 21:
         game_state["active"] = False
+        user = db.query(User).filter(User.username == game_state["username"]).first()
+        if user:
+            user.balance -= game_state["bet"]
+            db.commit()
+            db.refresh(user)
         return {
             "player_hand": game_state["player_hand"],
             "player_value": hand_value(game_state["player_hand"]),
             "result": "bust",
+            "new_balance": user.balance if user else None,
             "active": False,
         }
     elif hand_value(game_state["player_hand"]) == 21:

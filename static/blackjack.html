@@ -473,6 +473,7 @@
           if (data.result === "bust") {
               game_state = false;
               setPhase("over");
+              if (data.new_balance !== undefined && data.new_balance !== null) flashBalance(data.new_balance);
               showResult("Bust! 💥", "bust");
           } else if (data.result === "blackjack") {
               setTimeout(stand, 900);

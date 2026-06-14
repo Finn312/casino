@@ -20,7 +20,7 @@ def leaderboard(db=Depends(get_db)):
     leaderboard_users = (
         db.query(User)
         .filter(
-            User.show_leaderboard == True,
+            User.show_in_leaderboard == True,
             User.id_banned == False,
             User.is_admin == False,
             User.total_gold_earned >= 2000,
