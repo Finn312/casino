@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from database.database import get_db
-from database.models import User, game_history
+from database.models import User, game_history, Settings
 from core.schemas import UpdateBalanceRequest, SaveHistoryRequest, AskMurmelRequest, UpdateSettingsRequest
 from database import models
 import requests
@@ -126,7 +126,7 @@ def ask_murmel(request: AskMurmelRequest):
 #Get Settings Endpoint
 @router.get("/get_settings")
 def get_settings(username: str, db=Depends(get_db)):
-    settings = db.query(models.settings).filter(models.settings.username == username).first()
+    settings = db.query(models.Settings).filter(models.Settings.username == username).first()
     if not settings:
         return {"error": "Settings not found"}
     return {
@@ -139,7 +139,7 @@ def get_settings(username: str, db=Depends(get_db)):
 #Update Settings Endpoint
 @router.post("/update_settings")
 def update_settings(request: UpdateSettingsRequest, db=Depends(get_db)):
-    settings = db.query(models.settings).filter(models.settings.username == request.username).first()
+    settings = db.query(models.Settings).filter(models.Settings.username == request.username).first()
     if not settings:
         settings = models.settings(
             username=request.username,

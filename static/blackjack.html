@@ -477,6 +477,11 @@
         `Player Hand: ${data.player_hand.join(", ")} (Value: ${data.player_value}) | Dealer Hand: ${data.dealer_hand.join(", ")} (Value: ${data.dealer_value})`;
 
       flashBalance(data.new_balance);
+      if (data.total_gold_earned !== undefined) {
+        localStorage.setItem("total_gold_earned", data.total_gold_earned);
+        localStorage.setItem("level", data.level);
+        updateDisplay(null, data.level, data.total_gold_earned);
+      }
       if (username) {
           await fetch(`${API_URL}/SaveHistory`, {
             method: "POST",
@@ -517,6 +522,11 @@
         return;
       }
       balance = data.balance;
+      if (data.total_gold_earned !== undefined) {
+          localStorage.setItem("total_gold_earned", data.total_gold_earned);
+          localStorage.setItem("level", data.level);
+          updateDisplay(null, data.level, data.total_gold_earned);
+    }
       document.getElementById("start-btn").disabled = false;
     } catch (e) {
       document.getElementById("balance").textContent = "Fehler beim Laden";

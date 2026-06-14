@@ -366,4 +366,5 @@
     localStorage.removeItem('username');
     window.location.href = '/static/login.html';
   });
+  window.updateDisplay = updateDisplay;
 })();

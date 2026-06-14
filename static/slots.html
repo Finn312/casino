@@ -429,6 +429,11 @@
             ]);
 
             balance = data.new_balance;
+            if (data.total_gold_earned !== undefined) {
+                localStorage.setItem("total_gold_earned", data.total_gold_earned);
+                localStorage.setItem("level", data.level);
+                updateDisplay(null, data.level, data.total_gold_earned);
+        }
             document.getElementById("balance").textContent = "Credits: " + balance;
 
             if (username) {

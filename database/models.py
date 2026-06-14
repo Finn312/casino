@@ -8,7 +8,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     password = Column(String)
-    balance = Column(Integer, default=1000)
+    balance = Column(Integer, default=0)
     is_admin = Column(Boolean, default=False)
     id_banned = Column(Boolean, default=False)
     show_in_leaderboard = Column(Boolean, default=True)

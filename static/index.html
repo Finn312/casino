@@ -51,36 +51,42 @@
         name: 'Blackjack',
         desc: 'Beat the dealer to 21 without going bust.',
         tag: 'Card game',
+        requiredLevel:1
       },
       {
         icon: '🎡',
         name: 'Roulette',
         desc: 'Place your bets and spin the wheel.',
         tag: 'Table game',
+        requiredLevel:8
       },
       {
         icon: '🎰',
         name: 'Slot Machine',
         desc: 'Line up the symbols and hit the jackpot.',
         tag: 'Slots',
+        requiredLevel:2
       },
       {
         icon: '🎲',
         name: 'Dice',
         desc: 'Roll the dice and bet on the outcome.',
         tag: 'Dice game',
+        requiredLevel:1
       },
       {
         icon: '🂡',
         name: 'Poker',
         desc: "Build the best hand and outwit the table.",
         tag: 'Card game',
+        requiredLevel:9
       },
       {
         icon: '🐔',
         name: 'Chicken Road',
         desc: 'Überquere die Straße — cash out bevor das Auto kommt!',
         tag: 'Arcade',
+        requiredLevel:4
       },
     ];
 
@@ -120,28 +126,32 @@
       const btn = e.target.closest('.btn-play');
       if (!btn) return;
 
+      const level = parseInt(localStorage.getItem("level")) || 0;
+      const game = GAMES.find(g => g.name === btn.dataset.game);
+
+      if (game && game.requiredLevel > level) {
+          showToast(`Erreiche Level ${game.requiredLevel} um dieses Spiel freizuschalten!`);
+          return;
+      }
+
       if (btn.dataset.game == "Slot Machine") {
-        window.location.href = "/static/slots.html"
-        return;
+          window.location.href = "/static/slots.html";
+          return;
       }
-
       if (btn.dataset.game == "Dice") {
-        window.location.href = "/static/dice.html"
-        return;
+          window.location.href = "/static/dice.html";
+          return;
       }
-
       if (btn.dataset.game == "Blackjack") {
-        window.location.href = "/static/blackjack.html"
-        return;
+          window.location.href = "/static/blackjack.html";
+          return;
       }
-
       if (btn.dataset.game == "Chicken Road") {
-        window.location.href = "/static/chicken.html"
-        return;
+          window.location.href = "/static/chicken.html";
+          return;
       }
       showToast(`${btn.dataset.game} — Coming soon!`);
-    });
-
+});
 
   </script>
   <script src="/static/murmel.js"></script>

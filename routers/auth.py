@@ -17,7 +17,7 @@ def register(request: LoginRequest, db=Depends(get_db)):
         return {"error": "Es gitb diesen Namen bereits"}
     else:
         hashed_password = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt())
-        new_user = User(username=request.username, password=hashed_password.decode())
+        new_user = User(username=request.username, password=hashed_password.decode(), balance=500, total_gold_earned=500)
         db.add(new_user)
         db.commit()
         return {
