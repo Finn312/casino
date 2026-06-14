@@ -503,7 +503,7 @@
       if (data.total_gold_earned !== undefined) {
         localStorage.setItem("total_gold_earned", data.total_gold_earned);
         localStorage.setItem("level", data.level);
-        updateDisplay(null, data.level, data.total_gold_earned);
+        updateDisplay(balance, data.level, data.total_gold_earned);
       }
       if (username) {
           await fetch(`${API_URL}/SaveHistory`, {
@@ -548,7 +548,7 @@
       if (data.total_gold_earned !== undefined) {
           localStorage.setItem("total_gold_earned", data.total_gold_earned);
           localStorage.setItem("level", data.level);
-          updateDisplay(null, data.level, data.total_gold_earned);
+          updateDisplay(balance, data.level, data.total_gold_earned);
     }
       document.getElementById("start-btn").disabled = false;
     } catch (e) {
