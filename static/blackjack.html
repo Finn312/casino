@@ -419,7 +419,7 @@
 
   function getActiveBet() {
     const ci = document.getElementById('custom-bet');
-    return ci.style.display !== 'none' ? (parseInt(ci.value) || 1) : parseInt(document.getElementById('bet').value);
+    return getComputedStyle(ci).display !== 'none' ? (parseInt(ci.value) || 1) : parseInt(document.getElementById('bet').value);
   }
 
   async function startGame() {
@@ -446,7 +446,7 @@
         `Player Hand: ${data.player_hand.join(", ")} (Value: ${data.player_value}) | Dealer: ${data.dealer_card}, ?`;
 
       // Blackjack with first 2 cards → auto-stand, no Hit/Stand shown
-      if (data.player_value === 21 || data.result === "blackjack") {
+      if (data.blackjack === true) {
         setTimeout(stand, 900);
       } else {
         setPhase("playing");
@@ -543,7 +543,7 @@
         window.location.href = "/static/login.html";
         return;
       }
-      balance = data.new_balance;
+      balance = data.balance;
       if (data.total_gold_earned !== undefined) {
           localStorage.setItem("total_gold_earned", data.total_gold_earned);
           localStorage.setItem("level", data.level);
