@@ -520,8 +520,16 @@
         let balance = 0, username = "", bet = 10, difficulty = 1;
         let step = 0, multiplier = 1.0, alive = true, gameActive = false, busy = false;
 
-        /* 10^(s/18): exactly 10x at step 18 */
-        function multAt(s) { return Math.pow(10, s / MAX_STEP); }
+        /* Per-difficulty multiplier tables for stages 1-8 */
+        const MULTIPLIERS = {
+            1: [1, 1.14, 1.29, 1.47, 1.67, 1.90, 2.15, 2.45, 2.78],
+            2: [1, 1.30, 1.70, 2.20, 2.90, 3.80, 5.00, 6.50, 8.50]
+        };
+
+        function multAt(s) {
+            if (s >= 1 && s <= 8) return MULTIPLIERS[difficulty][s];
+            return Math.pow(10, s / MAX_STEP);
+        }
 
         /* Which "page" (window) a step belongs to */
         function pageOf(s)   { return Math.floor(s / VISIBLE); }
