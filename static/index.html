@@ -290,6 +290,10 @@
           window.location.href = "/static/mines.html";
           return;
       }
+      if (btn.dataset.game == "Roulette") {
+          window.location.href = "/static/roulette.html";
+          return;
+      }
       showToast(`${btn.dataset.game} — Coming soon!`);
     });
 

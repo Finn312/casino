@@ -376,8 +376,9 @@
 
         let balance = 0, username = '';
         let bet = 10, bombs = 3;
-        let gameActive = false, busy = false;
+        let gameActive = false, busy = false, isLoading = false;
         let revealed = 0, multiplier = 1.0;
+        let resetTimer = null;
 
         /* Mirror of server's calculate_multiplier */
         function calcMult(b, r) {
@@ -403,7 +404,7 @@
         }
 
         function updateCashout() {
-            const enabled = gameActive && revealed >= 3;
+            const enabled = gameActive && revealed >= 3 && !isLoading;
             document.getElementById('cashout-btn').toggleAttribute('disabled', !enabled);
             document.getElementById('cashout-mult').textContent = multiplier.toFixed(2) + 'x';
         }
@@ -460,7 +461,7 @@
 
         /* ── Game logic ── */
         async function startGame() {
-            if (busy || gameActive) return;
+            if (gameActive) return;
             if (bet <= 0 || !Number.isFinite(bet)) {
                 showMsg('Ungültiger Einsatz!', '');
                 return;
@@ -470,6 +471,10 @@
                 return;
             }
 
+            clearTimeout(resetTimer);
+            resetTimer = null;
+            isLoading = false;
+            busy = false;
             gameActive = true;
             revealed = 0;
             multiplier = 1.0;
@@ -483,9 +488,12 @@
         }
 
         async function clickTile(card) {
-            if (!gameActive || busy || card.classList.contains('flipped') || card.classList.contains('disabled')) return;
+            if (!gameActive || busy || isLoading || card.classList.contains('flipped') || card.classList.contains('disabled')) return;
+
+            isLoading = true;
             busy = true;
             card.classList.add('disabled');
+            document.getElementById('cashout-btn').setAttribute('disabled', '');
 
             let data;
             try {
@@ -498,14 +506,18 @@
             } catch {
                 showMsg('Verbindungsfehler', '');
                 card.classList.remove('disabled');
+                isLoading = false;
                 busy = false;
+                updateCashout();
                 return;
             }
 
             if (data.error) {
                 showMsg(data.error, '');
                 card.classList.remove('disabled');
+                isLoading = false;
                 busy = false;
+                updateCashout();
                 return;
             }
 
@@ -520,6 +532,7 @@
                 multiplier = data.multiplier;
                 balance = data.new_balance;
 
+                isLoading = false;
                 updateBalance();
                 updateCashout();
                 refreshNextMult();
@@ -547,6 +560,7 @@
                 setTimeout(() => grid.classList.remove('bomb-flash'), 600);
 
                 balance = data.new_balance;
+                isLoading = false;
                 showMsg(`💥 Bombe! -${bet} Credits`, 'loss');
 
                 /* Cascade-reveal remaining tiles as bombs */
@@ -557,7 +571,8 @@
                 setControlsLocked(false);
                 saveHistory(false);
 
-                setTimeout(() => {
+                resetTimer = setTimeout(() => {
+                    resetTimer = null;
                     resetGrid();
                     revealed = 0;
                     multiplier = 1.0;
@@ -630,7 +645,8 @@
             showMsg(`💰 Cashout! +${net} Credits (${multiplier.toFixed(2)}x)`, 'win');
             saveHistory(true);
 
-            setTimeout(() => {
+            resetTimer = setTimeout(() => {
+                resetTimer = null;
                 resetGrid();
                 revealed = 0;
                 multiplier = 1.0;

@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 #Games
 class SlotsRequest(BaseModel):
@@ -32,7 +33,13 @@ class BombGameRequest(BaseModel):
     multiplier: float
     bombs: int
     revealed: int
-    
+
+
+class RouletteRequest(BaseModel):
+    username: str
+    bet: int
+    bet_type: str
+    bet_value: Optional[int] = None
 
 
 #Auth

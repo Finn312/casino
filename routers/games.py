@@ -6,7 +6,7 @@ from .gamelogic.bombs import calculate_multiplier
 from database.database import get_db
 from database.models import User
 import random
-from core.schemas import SlotsRequest, BlackJackRequest, DiceRequest, ChickenGameRequest, BombGameRequest
+from core.schemas import SlotsRequest, BlackJackRequest, DiceRequest, ChickenGameRequest, BombGameRequest, RouletteRequest
 from core.utilities import calculate_level
 
 
@@ -230,3 +230,55 @@ def mines_game_cashout(request: BombGameRequest, db=Depends(get_db)):
     db.commit()
 
     return {"win": win, "new_balance": user.balance, "total_gold_earned": user.total_gold_earned, "level": calculate_level(user.total_gold_earned)}
+
+
+
+RED_NUMBERS = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
+
+@router.post("/roulette_game")
+def roulette_game(request: RouletteRequest, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    if request.bet > user.balance:
+        return {"error": "Not enough credits"}
+
+    spin = random.randint(0, 36)
+
+    if request.bet_type == "red":
+        won = spin in RED_NUMBERS
+    elif request.bet_type == "black":
+        won = spin not in RED_NUMBERS and spin != 0
+    elif request.bet_type == "even":
+        won = spin != 0 and spin % 2 == 0
+    elif request.bet_type == "odd":
+        won = spin % 2 == 1
+    elif request.bet_type == "1-12":
+        won = 1 <= spin <= 12
+    elif request.bet_type == "13-24":
+        won = 13 <= spin <= 24
+    elif request.bet_type == "25-36":
+        won = 25 <= spin <= 36
+    elif request.bet_type == "number":
+        won = spin == request.bet_value
+    else:
+        return {"error": "Ungültiger Wetttyp"}
+
+    if won:
+        multiplier = 36 if request.bet_type == "number" else (3 if request.bet_type in ["1-12", "13-24", "25-36"] else 2)
+        winnings = request.bet * multiplier - request.bet
+        user.balance += int(winnings)
+        user.total_gold_earned += int(request.bet * multiplier)
+    else:
+        winnings = -request.bet
+        user.balance -= request.bet
+
+    db.commit()
+
+    return {
+        "spin": spin,
+        "won": won,
+        "winnings": winnings,
+        "new_balance": user.balance,
+        "level": calculate_level(user.total_gold_earned)
+    }
