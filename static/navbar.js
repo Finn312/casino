@@ -305,6 +305,7 @@
       <nav class="nv-nav">
         <a href="/static/index.html#games">Games</a>
         <a href="/static/leaderboard.html">Leaderboard</a>
+        <a href="/static/shop.html">Shop</a>
         <a href="/static/settings.html">Settings</a>
       </nav>
       <div class="nv-wallet">
@@ -324,6 +325,7 @@
   mobileMenu.innerHTML = `
     <a href="/static/index.html#games">Games</a>
     <a href="/static/leaderboard.html">Leaderboard</a>
+    <a href="/static/shop.html">Shop</a>
     <a href="/static/settings.html">Settings</a>
   `;
   document.body.insertBefore(mobileMenu, document.body.children[1] || null);

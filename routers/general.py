@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from database.database import get_db
-from database.models import User, game_history, Settings
-from core.schemas import UpdateBalanceRequest, SaveHistoryRequest, AskMurmelRequest, UpdateSettingsRequest, DailyRequest
+from database.models import User, game_history, Settings, coin_codes
+from core.schemas import UpdateBalanceRequest, SaveHistoryRequest, AskMurmelRequest, UpdateSettingsRequest, DailyRequest, RedeemCodeRequest
 from database import models
 import requests
 from core.utilities import calculate_level
@@ -188,3 +188,17 @@ def get_dayle_status(username: str, db=Depends(get_db)):
         remaining_time = 24 * 3600 - (datetime.utcnow() - user.last_dayle).total_seconds()
         return {"can_spin": False, "remaining_time": remaining_time}
     return {"can_spin": True, "remaining_time": 0}
+
+
+@router.post("/redeem_code")
+def redeem_code(request: RedeemCodeRequest, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    code_entry = db.query(coin_codes).filter(coin_codes.code == request.code).first()
+    if not code_entry:
+        return {"error": "Ungültiger Code"}
+    user.balance += code_entry.value
+    db.delete(code_entry)
+    db.commit()
+    return {"message": f"Code eingelöst! Du hast {code_entry.value} Gold erhalten.", "new_balance": user.balance}

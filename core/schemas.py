@@ -74,3 +74,14 @@ class UpdateSettingsRequest(BaseModel):
 
 class DailyRequest(BaseModel):
     username: str
+    
+
+class RedeemCodeRequest(BaseModel):
+    username: str
+    code: str   
+    
+
+class AdminCreateCodeRequest(BaseModel):
+    username: str
+    password: str
+    new_balance: int

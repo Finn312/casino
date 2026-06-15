@@ -36,3 +36,8 @@ class Settings(Base):
     custom_input = Column(Boolean, default=False)
     
 
+class coin_codes(Base):
+    __tablename__="coin_codes"
+    
+    code = Column(String, primary_key=True, index=True)
+    value = Column(Integer)

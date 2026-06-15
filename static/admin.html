@@ -436,6 +436,31 @@
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     #toast.toast-err { border-color: var(--error); }
 
+    /* ── Generated code display ── */
+    .code-reveal {
+      display: none;
+      background: #111118;
+      border: 1.5px dashed var(--gold-dim);
+      border-radius: var(--radius);
+      padding: 0.7rem 0.85rem;
+      font-family: 'Courier New', monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: var(--gold-light);
+      text-align: center;
+      user-select: all;
+      cursor: text;
+    }
+    .code-reveal.show { display: block; }
+    .code-reveal-meta {
+      display: none;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .code-reveal-meta.show { display: block; }
+
     /* ── Empty state ── */
     .empty-state {
       text-align: center;
@@ -557,6 +582,19 @@
             </div>
             <button class="btn-outline" onclick="toggleLeaderboard()">Sichtbarkeit togglen</button>
             <div class="action-feedback" id="lb-feedback"></div>
+          </div>
+
+          <!-- Coin Code erstellen -->
+          <div class="action-panel">
+            <h3>🎟️ Coin Code erstellen</h3>
+            <div class="form-group" style="margin:0">
+              <label>Coin-Anzahl</label>
+              <input type="number" id="cc-amount" placeholder="z.B. 1000" min="1">
+            </div>
+            <button class="btn-outline" onclick="createCoinCode()">Code generieren</button>
+            <div class="action-feedback" id="cc-feedback"></div>
+            <div class="code-reveal" id="cc-code"></div>
+            <div class="code-reveal-meta" id="cc-meta"></div>
           </div>
 
         </div>
@@ -914,6 +952,37 @@
     }
     html += "</tbody></table>";
     wrap.innerHTML = html;
+  }
+
+  // ── Create Coin Code ─────────────────────────────────────────────────────
+
+  async function createCoinCode() {
+    const amount = parseInt(document.getElementById("cc-amount").value, 10);
+    const codeEl = document.getElementById("cc-code");
+    const metaEl = document.getElementById("cc-meta");
+    if (!amount || amount < 1) { setFeedback("cc-feedback", "Gültige Coin-Anzahl eingeben.", false); return; }
+
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    codeEl.classList.remove("show");
+    metaEl.classList.remove("show");
+
+    try {
+      const { ok, data } = await adminPost("/admin/create_coin_code", { new_balance: amount });
+      if (ok && !data.error) {
+        document.getElementById("cc-feedback").textContent = "";
+        document.getElementById("cc-feedback").className = "action-feedback";
+        codeEl.textContent = data.code;
+        codeEl.classList.add("show");
+        metaEl.textContent = `Wert: ${Number(data.value).toLocaleString("de-DE")} Coins`;
+        metaEl.classList.add("show");
+        document.getElementById("cc-amount").value = "";
+        showToast(`Code ${data.code} erstellt (${data.value} Coins).`);
+      } else {
+        setFeedback("cc-feedback", data.error || "Fehler.", false);
+      }
+    } catch { setFeedback("cc-feedback", "Server nicht erreichbar.", false); }
+    finally { btn.disabled = false; }
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

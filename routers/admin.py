@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends
 from database.database import get_db
-from database.models import User, game_history
+from database.models import User, game_history, coin_codes
+from database import models
 import bcrypt
-from core.schemas import AdminBanUserRequest, AdminSetCreditsRequest
+import secrets
+from core.schemas import AdminBanUserRequest, AdminSetCreditsRequest, AdminCreateCodeRequest
 
 router = APIRouter()
 
@@ -163,4 +165,28 @@ def show_in_leaderboard(request: AdminBanUserRequest, db=Depends(get_db)):
         "message": "Leaderboard visibility toggled",
         "player_name": player.username,
         "show_in_leaderboard": player.show_in_leaderboard,
+    }
+
+
+
+@router.post("/admin/create_coin_code")
+def create_coin_code(request: AdminCreateCodeRequest, db=Depends(get_db)):
+    admin_user = db.query(User).filter(User.username == request.username).first()
+    if not admin_user or not admin_user.is_admin:
+        return {"error": "Unauthorized"}
+    if not bcrypt.checkpw(request.password.encode(), admin_user.password.encode()):
+        return {"error": "Falsches Passwort"}
+
+    code = secrets.token_hex(4).upper()
+    while db.query(models.coin_codes).filter(models.coin_codes.code == code).first():
+        code = secrets.token_hex(4).upper()
+
+    new_code = models.coin_codes(code=code, value=request.new_balance)
+    db.add(new_code)
+    db.commit()
+
+    return {
+        "message": "Coin code created",
+        "code": new_code.code,
+        "value": new_code.value,
     }
