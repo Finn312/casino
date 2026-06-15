@@ -24,8 +24,9 @@ def register(request: LoginRequest, db=Depends(get_db)):
             "message": "Erfolgreich registriert",
             "username": new_user.username,
             "balance": new_user.balance,
+            "level": calculate_level(new_user.total_gold_earned),
+            "total_gold_earned": new_user.total_gold_earned,
         }
-
 
 @router.post("/login")
 def login(request: LoginRequest, db=Depends(get_db)):
