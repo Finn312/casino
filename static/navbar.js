@@ -269,20 +269,40 @@
     }
     #nv-mobile-menu a:hover { color: #e8e8ee; background: #2a2a32; }
 
+    /* ── Mobile logout (inside hamburger menu) ── */
+    #nv-mobile-logout {
+      background: none;
+      border: 1px solid #a57820;
+      color: #c9952a;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      margin-top: 0.25rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    #nv-mobile-logout:hover { background: #c9952a; color: #0d0d0f; border-color: #c9952a; }
+
     @media (max-width: 768px) {
       html, body { overflow-x: hidden; }
-      #buzz-navbar { padding: 0 0.6rem; gap: 0.35rem; }
-      .nv-logo { font-size: 0.95rem; }
-      .nv-level-inner { padding: 0.2rem 0.5rem; gap: 0.3rem; max-width: none; }
+      #buzz-navbar { padding: 0 0.75rem; gap: 0.5rem; }
+      .nv-logo { font-size: 0.9rem; }
+      .nv-level-wrap { flex: 1; max-width: 130px; }
+      .nv-level-inner { padding: 0.2rem 0.45rem; gap: 0.3rem; max-width: none; }
+      .nv-progress-track { min-width: 40px; }
       .nv-progress-xp { display: none; }
       .nv-nav { display: none; }
+      .nv-logout { display: none; }
       .nv-hamburger { display: flex; }
-      .nv-wallet { padding: 0.22rem 0.5rem; font-size: 0.73rem; gap: 0.25rem; }
-      .nv-logout { padding: 0.22rem 0.5rem; font-size: 0.73rem; }
+      .nv-wallet { padding: 0.22rem 0.6rem; font-size: 0.78rem; gap: 0.22rem; flex-shrink: 0; }
     }
     @media (max-width: 400px) {
       .nv-level-num { font-size: 0.68rem; }
-      .nv-wallet-amount { font-size: 0.73rem; }
+      .nv-wallet { padding: 0.2rem 0.45rem; font-size: 0.72rem; }
     }
   `;
   document.head.appendChild(style);
@@ -327,6 +347,7 @@
     <a href="/static/leaderboard.html">Leaderboard</a>
     <a href="/static/shop.html">Shop</a>
     <a href="/static/settings.html">Settings</a>
+    <button id="nv-mobile-logout">Logout</button>
   `;
   document.body.insertBefore(mobileMenu, document.body.children[1] || null);
 
@@ -446,9 +467,11 @@
   });
 
   // ── Logout ──
-  document.getElementById('nv-logout').addEventListener('click', () => {
+  function doLogout() {
     localStorage.removeItem('username');
     window.location.href = '/static/login.html';
-  });
+  }
+  document.getElementById('nv-logout').addEventListener('click', doLogout);
+  document.getElementById('nv-mobile-logout').addEventListener('click', doLogout);
   window.updateDisplay = updateDisplay;
 })();
