@@ -230,23 +230,27 @@
     }
 
     const grid = document.getElementById('games-grid');
-    const level = parseInt(localStorage.getItem("level")) || 0;
 
-    GAMES.forEach(game => {
-      const locked = game.requiredLevel > level;
-      const card = document.createElement('article');
-      card.className = 'card' + (locked ? ' card--locked' : '');
-      card.innerHTML = `
-        <span class="card-icon">${game.icon}</span>
-        <div class="card-name">${game.name}</div>
-        <div class="card-desc">${game.desc}</div>
-        <span class="card-tag">${game.tag}</span>
-        <button class="btn-play" data-game="${game.name}">
-          ${locked ? `🔒 Level ${game.requiredLevel}` : 'Play'}
-        </button>
-      `;
-      grid.appendChild(card);
-    });
+    window.renderGames = function(level) {
+      grid.innerHTML = '';
+      GAMES.forEach(game => {
+        const locked = game.requiredLevel > level;
+        const card = document.createElement('article');
+        card.className = 'card' + (locked ? ' card--locked' : '');
+        card.innerHTML = `
+          <span class="card-icon">${game.icon}</span>
+          <div class="card-name">${game.name}</div>
+          <div class="card-desc">${game.desc}</div>
+          <span class="card-tag">${game.tag}</span>
+          <button class="btn-play" data-game="${game.name}">
+            ${locked ? `🔒 Level ${game.requiredLevel}` : 'Play'}
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+    };
+
+    window.renderGames(parseInt(localStorage.getItem("level")) || 0);
 
     // Toast helper
     let toastTimer;
@@ -264,8 +268,9 @@
       if (!btn) return;
 
       const game = GAMES.find(g => g.name === btn.dataset.game);
+      const currentLevel = parseInt(localStorage.getItem("level")) || 0;
 
-      if (game && game.requiredLevel > level) {
+      if (game && game.requiredLevel > currentLevel) {
           showToast(`Erreiche Level ${game.requiredLevel} um dieses Spiel freizuschalten!`);
           return;
       }
@@ -375,6 +380,10 @@
           dailyResult.classList.add('show');
           if (data.new_balance !== undefined) {
             localStorage.setItem('balance', data.new_balance);
+            const lvl  = parseInt(localStorage.getItem('level')) || 0;
+            const gold = parseInt(localStorage.getItem('total_gold_earned')) || 0;
+            if (typeof window.updateDisplay === 'function') window.updateDisplay(data.new_balance, lvl, gold);
+            if (typeof window.renderGames === 'function') window.renderGames(lvl);
           }
           setTimeout(closeDailyPopup, 3000);
           startCountdown(24 * 3600);

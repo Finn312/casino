@@ -434,6 +434,7 @@
         localStorage.setItem('level', lvl);
         localStorage.setItem('total_gold_earned', gold);
         updateDisplay(data.balance ?? 0, lvl, gold);
+        if (typeof window.renderGames === 'function') window.renderGames(lvl);
       })
       .catch(() => {});
   }
