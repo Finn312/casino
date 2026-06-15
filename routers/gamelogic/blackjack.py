@@ -56,14 +56,7 @@ def dealer_draw(dealer_hand, deck):
   return dealer_hand
 
 
-game_state = {
-    "deck": [],
-    "player_hand": [],
-    "dealer_hand": [],
-    "bet": 0,
-    "active": False,
-    "username": "",
-}
+game_states: dict = {}
 
 
 

@@ -17,6 +17,10 @@ class DiceRequest(BaseModel):
 class BlackJackRequest(BaseModel):
     bet: int
     username: str
+
+
+class BlackJackActionRequest(BaseModel):
+    username: str
     
     
 class ChickenGameRequest(BaseModel):

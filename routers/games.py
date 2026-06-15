@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
 from .gamelogic.slots import spin_reels, calculate_win as slots_calculate_win
-from .gamelogic.blackjack import shuffle_deck, hand_value, dealer_draw, check_winner, game_state
+from .gamelogic.blackjack import shuffle_deck, hand_value, dealer_draw, check_winner, game_states
 from .gamelogic.dice import calculate_win as dice_calculate_win
 from .gamelogic.bombs import calculate_multiplier
 from database.database import get_db
 from database.models import User
 import random
-from core.schemas import SlotsRequest, BlackJackRequest, DiceRequest, ChickenGameRequest, BombGameRequest, RouletteRequest
+from core.schemas import SlotsRequest, BlackJackRequest, BlackJackActionRequest, DiceRequest, ChickenGameRequest, BombGameRequest, RouletteRequest
 from core.utilities import calculate_level
 
 
@@ -41,15 +41,19 @@ def blackjack_start(request: BlackJackRequest, db=Depends(get_db)):
     if request.bet > user.balance:
         return {"error": "Not enough credits"}
 
-    game_state["deck"] = shuffle_deck()
-    game_state["player_hand"] = [game_state["deck"].pop(0), game_state["deck"].pop(0)]
-    game_state["dealer_hand"] = [game_state["deck"].pop(0), game_state["deck"].pop(0)]
-    game_state["bet"] = request.bet
-    game_state["active"] = True
-    game_state["username"] = request.username
+    gs = {
+        "deck": shuffle_deck(),
+        "player_hand": [],
+        "dealer_hand": [],
+        "bet": request.bet,
+        "active": True,
+    }
+    gs["player_hand"] = [gs["deck"].pop(0), gs["deck"].pop(0)]
+    gs["dealer_hand"] = [gs["deck"].pop(0), gs["deck"].pop(0)]
+    game_states[request.username] = gs
 
     old_level = calculate_level(user.total_gold_earned)
-    if hand_value(game_state["player_hand"]) == 21:
+    if hand_value(gs["player_hand"]) == 21:
         win = request.bet * 2
         user.balance = user.balance - request.bet + win
         user.total_gold_earned += win
@@ -57,10 +61,11 @@ def blackjack_start(request: BlackJackRequest, db=Depends(get_db)):
         if new_level > old_level:
             user.buzz_coins += new_level
         db.commit()
+        del game_states[request.username]
         return {
-            "player_hand": game_state["player_hand"],
+            "player_hand": gs["player_hand"],
             "player_value": 21,
-            "dealer_card": game_state["dealer_hand"][0],
+            "dealer_card": gs["dealer_hand"][0],
             "active": False,
             "blackjack": True,
             "win": win,
@@ -73,43 +78,47 @@ def blackjack_start(request: BlackJackRequest, db=Depends(get_db)):
 
     db.commit()
     return {
-        "player_hand": game_state["player_hand"],
-        "player_value": hand_value(game_state["player_hand"]),
-        "dealer_card": game_state["dealer_hand"][0],
+        "player_hand": gs["player_hand"],
+        "player_value": hand_value(gs["player_hand"]),
+        "dealer_card": gs["dealer_hand"][0],
         "active": True,
         "total_gold_earned": user.total_gold_earned,
         "level": calculate_level(user.total_gold_earned),
     }
-    
+
 #Blackjack Hit Endpoint
 @router.post("/blackjack/hit")
-def blackjack_hit(db=Depends(get_db)):
-    game_state["player_hand"].append(game_state["deck"].pop(0))
-    if hand_value(game_state["player_hand"]) > 21:
-        game_state["active"] = False
-        user = db.query(User).filter(User.username == game_state["username"]).first()
+def blackjack_hit(request: BlackJackActionRequest, db=Depends(get_db)):
+    gs = game_states.get(request.username)
+    if not gs:
+        return {"error": "Kein aktives Spiel"}
+    gs["player_hand"].append(gs["deck"].pop(0))
+    if hand_value(gs["player_hand"]) > 21:
+        gs["active"] = False
+        user = db.query(User).filter(User.username == request.username).first()
         if user:
-            user.balance -= game_state["bet"]
+            user.balance -= gs["bet"]
             db.commit()
             db.refresh(user)
+        del game_states[request.username]
         return {
-            "player_hand": game_state["player_hand"],
-            "player_value": hand_value(game_state["player_hand"]),
+            "player_hand": gs["player_hand"],
+            "player_value": hand_value(gs["player_hand"]),
             "result": "bust",
             "new_balance": user.balance if user else None,
             "active": False,
         }
-    elif hand_value(game_state["player_hand"]) == 21:
+    elif hand_value(gs["player_hand"]) == 21:
         return {
-            "player_hand": game_state["player_hand"],
+            "player_hand": gs["player_hand"],
             "player_value": 21,
             "result": "blackjack",
             "active": True,
         }
     else:
         return {
-            "player_hand": game_state["player_hand"],
-            "player_value": hand_value(game_state["player_hand"]),
+            "player_hand": gs["player_hand"],
+            "player_value": hand_value(gs["player_hand"]),
             "result": "continue",
             "active": True,
         }
@@ -117,39 +126,40 @@ def blackjack_hit(db=Depends(get_db)):
 
 #Blackjack Stand Endpoint
 @router.post("/blackjack/stand")
-def blackjack_stand(db=Depends(get_db)):
-    user = db.query(User).filter(User.username == game_state["username"]).first()
+def blackjack_stand(request: BlackJackActionRequest, db=Depends(get_db)):
+    gs = game_states.get(request.username)
+    if not gs:
+        return {"error": "Kein aktives Spiel"}
+    user = db.query(User).filter(User.username == request.username).first()
     if not user:
         return {"error": "Nutzer nicht gefunden"}
 
-    game_state["dealer_hand"] = dealer_draw(
-        game_state["dealer_hand"], game_state["deck"]
-    )
-    player_value = hand_value(game_state["player_hand"])
-    dealer_value = hand_value(game_state["dealer_hand"])
+    gs["dealer_hand"] = dealer_draw(gs["dealer_hand"], gs["deck"])
+    player_value = hand_value(gs["player_hand"])
+    dealer_value = hand_value(gs["dealer_hand"])
     gewinner = check_winner(player_value, dealer_value)
 
     if gewinner == "player":
-        win = game_state["bet"] * 2
+        win = gs["bet"] * 2
     elif gewinner == "draw":
-        win = game_state["bet"]
+        win = gs["bet"]
     else:
         win = 0
 
     old_level = calculate_level(user.total_gold_earned)
-    user.balance = user.balance - game_state["bet"] + win
+    user.balance = user.balance - gs["bet"] + win
     user.total_gold_earned += win
     new_level = calculate_level(user.total_gold_earned)
     if new_level > old_level:
         user.buzz_coins += new_level
     db.commit()
-    game_state["active"] = False
+    del game_states[request.username]
 
     return {
-        "player_hand": game_state["player_hand"],
+        "player_hand": gs["player_hand"],
         "player_value": player_value,
         "dealer_value": dealer_value,
-        "dealer_hand": game_state["dealer_hand"],
+        "dealer_hand": gs["dealer_hand"],
         "gewinner": gewinner,
         "win": win,
         "new_balance": user.balance,
