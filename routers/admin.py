@@ -4,7 +4,7 @@ from database.models import User, game_history, coin_codes
 from database import models
 import bcrypt
 import secrets
-from core.schemas import AdminBanUserRequest, AdminSetCreditsRequest, AdminCreateCodeRequest, AdminSetLevelRequest
+from core.schemas import AdminBanUserRequest, AdminSetCreditsRequest, AdminCreateCodeRequest, AdminSetLevelRequest, AdminSetBuzzCoinsRequest
 
 router = APIRouter()
 
@@ -195,6 +195,24 @@ def show_in_leaderboard(request: AdminBanUserRequest, db=Depends(get_db)):
         "show_in_leaderboard": player.show_in_leaderboard,
     }
 
+
+
+@router.post("/admin/set_buzz_coins")
+def admin_set_buzz_coins(request: AdminSetBuzzCoinsRequest, db=Depends(get_db)):
+    admin_user = db.query(User).filter(User.username == request.username).first()
+    if not admin_user or not admin_user.is_admin:
+        return {"error": "Unauthorized"}
+    if not bcrypt.checkpw(request.password.encode(), admin_user.password.encode()):
+        return {"error": "Falsches Passwort"}
+
+    player = db.query(User).filter(User.username == request.player_name).first()
+    if not player:
+        return {"error": "Player not found"}
+
+    player.buzz_coins = request.amount
+    db.commit()
+
+    return {"username": player.username, "buzz_coins": player.buzz_coins}
 
 
 @router.post("/admin/create_coin_code")

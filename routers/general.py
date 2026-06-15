@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from database.database import get_db
 from database.models import User, game_history, Settings, coin_codes
-from core.schemas import UpdateBalanceRequest, SaveHistoryRequest, AskMurmelRequest, UpdateSettingsRequest, DailyRequest, RedeemCodeRequest
+from core.schemas import UpdateBalanceRequest, SaveHistoryRequest, AskMurmelRequest, UpdateSettingsRequest, DailyRequest, RedeemCodeRequest, BuyCoinsRequest, SpinWheelRequest
 from database import models
 import requests
 from core.utilities import calculate_level
@@ -95,6 +95,8 @@ def get_balance(username: str, db=Depends(get_db)):
         "id_banned": user.id_banned,
         "total_gold_earned": user.total_gold_earned,
         "level": calculate_level(user.total_gold_earned),
+        "buzz_coins": user.buzz_coins,
+        "is_admin": user.is_admin,
     }
 
 
@@ -188,6 +190,59 @@ def get_dayle_status(username: str, db=Depends(get_db)):
         remaining_time = 24 * 3600 - (datetime.utcnow() - user.last_dayle).total_seconds()
         return {"can_spin": False, "remaining_time": remaining_time}
     return {"can_spin": True, "remaining_time": 0}
+
+
+COIN_PACKAGES = {
+    1:  5_000,
+    3:  16_000,
+    5:  28_000,
+    10: 60_000,
+}
+
+@router.post("/shop/buy_coins")
+def shop_buy_coins(request: BuyCoinsRequest, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    if request.package not in COIN_PACKAGES:
+        return {"error": "Ungültiges Paket"}
+    if user.buzz_coins < request.package:
+        return {"error": f"Nicht genug Buzz Coins (benötigt: {request.package})"}
+    coins = COIN_PACKAGES[request.package]
+    user.buzz_coins -= request.package
+    user.balance += coins
+    db.commit()
+    return {"new_balance": user.balance, "buzz_coins": user.buzz_coins}
+
+
+def _wheel_reward() -> int:
+    r = random.random()
+    if r < 0.18:        # 18 %
+        return random.randint(55, 550)
+    elif r < 0.40:      # 22 %
+        return random.randint(550, 5_500)
+    elif r < 0.55:      # 15 %
+        return random.randint(5_500, 27_500)
+    elif r < 0.85:      # 30 %
+        return random.randint(27_500, 110_000)
+    elif r < 0.96:      # 11 %
+        return random.randint(110_000, 330_000)
+    else:               #  4 %
+        return random.randint(330_000, 550_000)
+
+
+@router.post("/shop/spin_wheel")
+def shop_spin_wheel(request: SpinWheelRequest, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    if user.buzz_coins < 5:
+        return {"error": "Nicht genug Buzz Coins (benötigt: 5)"}
+    reward = _wheel_reward()
+    user.buzz_coins -= 5
+    user.balance += reward
+    db.commit()
+    return {"reward": reward, "new_balance": user.balance, "buzz_coins": user.buzz_coins}
 
 
 @router.post("/redeem_code")

@@ -6,24 +6,240 @@
   <title>Shop – BuzzCasino</title>
   <link rel="stylesheet" href="style.css" />
   <style>
+    :root {
+      --buzz: #ffd700;
+      --buzz-dim: #c9952a;
+      --buzz-dark: #1a1a2e;
+      --buzz-mid: #16213e;
+    }
+
     .shop-wrap {
-      max-width: 560px;
-      margin: 3rem auto;
+      max-width: 700px;
+      margin: 2rem auto;
       padding: 0 1rem 4rem;
       display: flex;
       flex-direction: column;
-      gap: 1.75rem;
+      gap: 2rem;
     }
 
+    /* ── Page title ── */
     .shop-title {
       text-align: center;
-      font-size: 1.7rem;
+      font-size: 1.8rem;
       font-weight: 700;
-      color: var(--gold-light);
-      letter-spacing: 0.03em;
+      color: var(--buzz);
+      letter-spacing: 0.04em;
     }
-    .shop-title span { color: var(--text); }
 
+    /* ── Buzz Coins banner ── */
+    .buzz-banner {
+      background: linear-gradient(135deg, #1a1a2e 0%, #0d1b4b 100%);
+      border: 1.5px solid var(--buzz-dim);
+      border-radius: 16px;
+      padding: 1.25rem 1.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .buzz-icon {
+      font-size: 2.4rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 8px #ffd70088);
+    }
+    .buzz-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 2px;
+    }
+    .buzz-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--buzz);
+      line-height: 1;
+    }
+    .buzz-hint {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: right;
+      line-height: 1.5;
+    }
+
+    /* ── Section headers ── */
+    .section-header {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--buzz);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+
+    /* ── Coin packages ── */
+    .packages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+      gap: 1rem;
+    }
+    .pkg-card {
+      position: relative;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .pkg-card:hover {
+      border-color: var(--buzz-dim);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px #ffd70022;
+    }
+    .pkg-card.best {
+      border-color: var(--buzz);
+      box-shadow: 0 0 18px #ffd70033;
+    }
+    .best-badge {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--buzz);
+      color: #0d0d0f;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .pkg-buzz-cost {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--buzz);
+    }
+    .pkg-coins {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .pkg-coins-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    .pkg-buy-btn {
+      margin-top: 0.4rem;
+      width: 100%;
+      background: var(--buzz);
+      color: #0d0d0f;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.5rem 0;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+    .pkg-buy-btn:hover { background: var(--gold-light); }
+    .pkg-buy-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Lucky Wheel ── */
+    .wheel-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .wheel-cost-badge {
+      background: rgba(255,215,0,0.12);
+      border: 1px solid var(--buzz-dim);
+      border-radius: 20px;
+      padding: 0.35rem 1rem;
+      font-size: 0.82rem;
+      color: var(--buzz);
+      font-weight: 600;
+    }
+    .wheel-outer {
+      position: relative;
+      width: 300px;
+      height: 300px;
+    }
+    .wheel-pointer {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.6rem;
+      color: var(--buzz);
+      z-index: 10;
+      filter: drop-shadow(0 2px 4px #000a);
+      line-height: 1;
+    }
+    #wheel-canvas {
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      box-shadow: 0 0 30px #ffd70033, 0 0 6px #0008;
+      display: block;
+    }
+    .spin-btn {
+      background: linear-gradient(135deg, var(--buzz) 0%, #c9952a 100%);
+      color: #0d0d0f;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 800;
+      padding: 0.75rem 2.5rem;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 4px 16px #ffd70044;
+      font-family: inherit;
+    }
+    .spin-btn:hover { box-shadow: 0 4px 24px #ffd70066; transform: scale(1.02); }
+    .spin-btn:active { transform: scale(0.97); }
+    .spin-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+    .wheel-result {
+      min-height: 2.5rem;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .wheel-result.win { color: #6ee79a; }
+    .wheel-result.error { color: #f07070; }
+
+    /* ── Shared message ── */
+    .shop-msg {
+      font-size: 0.88rem;
+      padding: 0.6rem 0.85rem;
+      border-radius: var(--radius);
+      display: none;
+    }
+    .shop-msg.success {
+      display: block;
+      background: rgba(80,200,120,0.12);
+      border: 1px solid rgba(80,200,120,0.3);
+      color: #6ee79a;
+    }
+    .shop-msg.error {
+      display: block;
+      background: rgba(220,80,80,0.12);
+      border: 1px solid rgba(220,80,80,0.3);
+      color: #f07070;
+    }
+
+    /* ── Classic card ── */
     .shop-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -31,9 +247,8 @@
       padding: 1.75rem 1.5rem 1.5rem;
       display: flex;
       flex-direction: column;
-      gap: 1.1rem;
+      gap: 1rem;
     }
-
     .shop-card-title {
       font-size: 1.05rem;
       font-weight: 700;
@@ -42,26 +257,13 @@
       align-items: center;
       gap: 0.5rem;
     }
-
     .shop-card-sub {
       font-size: 0.83rem;
       color: var(--muted);
-      margin-top: -0.5rem;
+      margin-top: -0.4rem;
     }
-
-    .shop-field {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-
-    .shop-field label {
-      font-size: 0.78rem;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
+    .shop-field { display: flex; flex-direction: column; gap: 0.4rem; }
+    .shop-field label { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
     .shop-input {
       background: #111118;
       border: 1px solid var(--border);
@@ -73,12 +275,8 @@
       transition: border-color 0.15s;
       font-family: inherit;
     }
-    .shop-input:focus {
-      outline: none;
-      border-color: var(--gold);
-    }
+    .shop-input:focus { outline: none; border-color: var(--gold); }
     .shop-input::placeholder { color: #44444f; }
-
     .shop-btn {
       background: var(--gold);
       color: #0d0d0f;
@@ -95,26 +293,6 @@
     .shop-btn:hover { background: var(--gold-light); }
     .shop-btn:active { transform: scale(0.97); }
     .shop-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .shop-msg {
-      font-size: 0.88rem;
-      padding: 0.6rem 0.85rem;
-      border-radius: var(--radius);
-      display: none;
-    }
-    .shop-msg.success {
-      display: block;
-      background: rgba(80, 200, 120, 0.12);
-      border: 1px solid rgba(80, 200, 120, 0.3);
-      color: #6ee79a;
-    }
-    .shop-msg.error {
-      display: block;
-      background: rgba(220, 80, 80, 0.12);
-      border: 1px solid rgba(220, 80, 80, 0.3);
-      color: #f07070;
-    }
-
     .code-display {
       background: #111118;
       border: 1.5px dashed var(--gold-dim);
@@ -130,78 +308,132 @@
       user-select: all;
     }
     .code-display.show { display: block; }
-
-    .code-meta {
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--muted);
-      display: none;
-    }
+    .code-meta { text-align: center; font-size: 0.8rem; color: var(--muted); display: none; }
     .code-meta.show { display: block; }
-
     #admin-section { display: none; }
     #admin-section.visible { display: flex; }
+
+    /* ── Level-up toast ── */
+    .level-toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: linear-gradient(135deg, #1a1a2e, #0d1b4b);
+      border: 2px solid var(--buzz);
+      border-radius: 14px;
+      padding: 1rem 1.75rem;
+      text-align: center;
+      box-shadow: 0 8px 32px #ffd70044;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 999;
+      pointer-events: none;
+    }
+    .level-toast.show { transform: translateX(-50%) translateY(0); }
+    .level-toast-title { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .level-toast-body { font-size: 1.1rem; font-weight: 700; color: var(--buzz); margin-top: 2px; }
   </style>
 </head>
 <body>
   <script src="/static/navbar.js"></script>
 
   <div class="shop-wrap">
-    <h1 class="shop-title">🎟 <span>Buzz</span>Casino Shop</h1>
+    <h1 class="shop-title">⚡ BuzzCasino Shop</h1>
+
+    <!-- ── Buzz Coins Balance ── -->
+    <div class="buzz-banner">
+      <div class="buzz-icon">⚡</div>
+      <div>
+        <div class="buzz-label">Deine Buzz Coins</div>
+        <div class="buzz-value" id="buzz-display">–</div>
+      </div>
+      <div class="buzz-hint">Level up, um<br>Buzz Coins zu verdienen</div>
+    </div>
+
+    <!-- ── Coin Packages ── -->
+    <div>
+      <div class="section-header">💰 Coin Pakete</div>
+      <p style="font-size:0.82rem;color:var(--muted);margin:0.5rem 0 1rem;">Tausche Buzz Coins gegen Gold Coins ein.</p>
+      <div class="packages-grid">
+        <div class="pkg-card" data-pkg="1">
+          <div class="pkg-buzz-cost">⚡ 1 Buzz Coin</div>
+          <div class="pkg-coins">5.000</div>
+          <div class="pkg-coins-label">Gold Coins</div>
+          <button class="pkg-buy-btn" onclick="buyPackage(1)">Kaufen</button>
+        </div>
+        <div class="pkg-card" data-pkg="3">
+          <div class="pkg-buzz-cost">⚡ 3 Buzz Coins</div>
+          <div class="pkg-coins">16.000</div>
+          <div class="pkg-coins-label">Gold Coins</div>
+          <button class="pkg-buy-btn" onclick="buyPackage(3)">Kaufen</button>
+        </div>
+        <div class="pkg-card" data-pkg="5">
+          <div class="pkg-buzz-cost">⚡ 5 Buzz Coins</div>
+          <div class="pkg-coins">28.000</div>
+          <div class="pkg-coins-label">Gold Coins</div>
+          <button class="pkg-buy-btn" onclick="buyPackage(5)">Kaufen</button>
+        </div>
+        <div class="pkg-card best" data-pkg="10">
+          <div class="best-badge">Bester Wert</div>
+          <div class="pkg-buzz-cost">⚡ 10 Buzz Coins</div>
+          <div class="pkg-coins">60.000</div>
+          <div class="pkg-coins-label">Gold Coins</div>
+          <button class="pkg-buy-btn" onclick="buyPackage(10)">Kaufen</button>
+        </div>
+      </div>
+      <div class="shop-msg" id="pkg-msg" style="margin-top:0.75rem;"></div>
+    </div>
+
+    <!-- ── Lucky Wheel ── -->
+    <div>
+      <div class="section-header">🎡 Glücksrad</div>
+      <p style="font-size:0.82rem;color:var(--muted);margin:0.5rem 0 1rem;">Drehe das Rad und gewinne bis zu 500.000 Gold Coins!</p>
+      <div class="wheel-section">
+        <div class="wheel-cost-badge">⚡ Kostet 5 Buzz Coins pro Dreh</div>
+        <div class="wheel-outer">
+          <div class="wheel-pointer">▼</div>
+          <canvas id="wheel-canvas" width="300" height="300"></canvas>
+        </div>
+        <button class="spin-btn" id="spin-btn" onclick="spinWheel()">Drehen!</button>
+        <div class="wheel-result" id="spin-result"></div>
+      </div>
+    </div>
 
     <!-- ── Code einlösen ── -->
     <div class="shop-card">
       <div class="shop-card-title">🎁 Code einlösen</div>
       <p class="shop-card-sub">Gib deinen Gutschein-Code ein, um Coins zu erhalten.</p>
-
       <div class="shop-field">
         <label for="redeem-input">Code</label>
-        <input
-          id="redeem-input"
-          class="shop-input"
-          type="text"
-          placeholder="z.B. A1B2C3D4"
-          autocomplete="off"
-          spellcheck="false"
-        />
+        <input id="redeem-input" class="shop-input" type="text" placeholder="z.B. A1B2C3D4" autocomplete="off" spellcheck="false" />
       </div>
-
       <button class="shop-btn" id="redeem-btn">Einlösen</button>
       <div class="shop-msg" id="redeem-msg"></div>
     </div>
 
     <!-- ── Admin: Code erstellen ── -->
-    <div class="shop-card" id="admin-section" style="border-color: #3a2a10;">
+    <div class="shop-card" id="admin-section" style="border-color:#3a2a10;">
       <div class="shop-card-title">🔐 Admin – Code erstellen</div>
       <p class="shop-card-sub">Erstelle einen neuen Coin-Code mit einem bestimmten Wert.</p>
-
       <div class="shop-field">
         <label for="admin-amount">Coin-Wert</label>
-        <input
-          id="admin-amount"
-          class="shop-input"
-          type="number"
-          min="1"
-          placeholder="z.B. 1000"
-        />
+        <input id="admin-amount" class="shop-input" type="number" min="1" placeholder="z.B. 1000" />
       </div>
-
       <div class="shop-field">
         <label for="admin-password">Admin-Passwort</label>
-        <input
-          id="admin-password"
-          class="shop-input"
-          type="password"
-          placeholder="Dein Passwort"
-          autocomplete="current-password"
-        />
+        <input id="admin-password" class="shop-input" type="password" placeholder="Dein Passwort" autocomplete="current-password" />
       </div>
-
       <button class="shop-btn" id="admin-btn">Code generieren</button>
       <div class="shop-msg" id="admin-msg"></div>
       <div class="code-display" id="generated-code"></div>
       <div class="code-meta" id="code-meta"></div>
     </div>
+  </div>
+
+  <!-- ── Level-up toast ── -->
+  <div class="level-toast" id="level-toast">
+    <div class="level-toast-title">Level Up!</div>
+    <div class="level-toast-body" id="level-toast-body"></div>
   </div>
 
   <script>
@@ -210,37 +442,213 @@
       : 'https://finndev.me';
 
     const username = localStorage.getItem('username');
-    if (!username || username === 'undefined') {
-      window.location.href = '/static/login.html';
-    }
+    if (!username || username === 'undefined') window.location.href = '/static/login.html';
+
+    function fmt(n) { return Number(n).toLocaleString('de-DE'); }
 
     function showMsg(el, text, type) {
       el.textContent = text;
       el.className = 'shop-msg ' + type;
     }
 
-    // ── Check admin status ──
+    function showLevelUp(newLevel) {
+      const toast = document.getElementById('level-toast');
+      document.getElementById('level-toast-body').textContent = `Du bist jetzt Level ${newLevel}! +${newLevel} Buzz Coins erhalten.`;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    function updateBuzzDisplay(coins) {
+      document.getElementById('buzz-display').textContent = coins;
+    }
+
+    // Fetch initial balance & buzz coins
     fetch(`${API_URL}/get_balance?username=${encodeURIComponent(username)}`)
       .then(r => r.json())
       .then(data => {
+        if (data.buzz_coins !== undefined) updateBuzzDisplay(data.buzz_coins);
         if (data.is_admin) {
           document.getElementById('admin-section').classList.add('visible');
           document.getElementById('admin-section').style.display = 'flex';
         }
+        if (data.balance !== undefined && window.updateDisplay) {
+          window.updateDisplay(data.balance, data.level, data.total_gold_earned);
+        }
       })
       .catch(() => {});
 
+    // ── Buy Package ──
+    async function buyPackage(pkg) {
+      const msgEl = document.getElementById('pkg-msg');
+      const btns = document.querySelectorAll('.pkg-buy-btn');
+      btns.forEach(b => b.disabled = true);
+      try {
+        const res = await fetch(`${API_URL}/shop/buy_coins`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, package: pkg }),
+        });
+        const data = await res.json();
+        if (data.error) {
+          showMsg(msgEl, data.error, 'error');
+        } else {
+          const pkgCoins = { 1: 5000, 3: 16000, 5: 28000, 10: 60000 };
+          showMsg(msgEl, `+${fmt(pkgCoins[pkg])} Gold Coins erhalten! Neues Guthaben: ${fmt(data.new_balance)}`, 'success');
+          updateBuzzDisplay(data.buzz_coins);
+          if (window.updateDisplay) window.updateDisplay(data.new_balance, null, null);
+        }
+      } catch {
+        showMsg(msgEl, 'Verbindungsfehler. Bitte erneut versuchen.', 'error');
+      } finally {
+        btns.forEach(b => b.disabled = false);
+      }
+    }
+
+    // ── Lucky Wheel ──
+    const canvas = document.getElementById('wheel-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 300, H = 300, cx = W / 2, cy = H / 2, R = 138;
+
+    // Weighted segments — prob must sum to 1.0
+    // Each segment's angleDeg, startDeg, centerDeg, and cssTarget are derived below.
+    const SEG_DEFS = [
+      { label: '55 – 550',       short: '55-550',  prob: 0.18, color: '#1a1a3a', textColor: '#ffd700', maxReward: 550 },
+      { label: '550 – 5.500',   short: '550-5.5K',prob: 0.22, color: '#ffd700', textColor: '#0d0d1a', maxReward: 5500 },
+      { label: '5.500 – 27.500',short: '5.5K-27K',prob: 0.15, color: '#c9a227', textColor: '#0d0d1a', maxReward: 27500 },
+      { label: '27.5K – 110K',  short: '28K+',    prob: 0.30, color: '#12122e', textColor: '#ffd700', maxReward: 110000 },
+      { label: '110K – 330K',   short: '110K+',   prob: 0.11, color: '#ff9900', textColor: '#0d0d1a', maxReward: 330000 },
+      { label: '330K – 550K',   short: '330K+',   prob: 0.04, color: '#ff4400', textColor: '#ffffff', maxReward: 550000 },
+    ];
+    // Precompute angles (all in degrees, measured clockwise from 12-o'clock)
+    let _cum = 0;
+    const SEGS = SEG_DEFS.map(s => {
+      const angleDeg  = s.prob * 360;
+      const startDeg  = _cum;
+      const endDeg    = _cum + angleDeg;
+      const centerDeg = _cum + angleDeg / 2;
+      // CSS rotation needed to bring segment center to the pointer at top:
+      // pointer is at 0°; segment center is at centerDeg° CW from top.
+      // Rotating the wheel CW by (360 - centerDeg) brings it to 0°.
+      const cssTarget = ((360 - centerDeg) + 360) % 360;
+      _cum = endDeg;
+      return { ...s, angleDeg, startDeg, endDeg, centerDeg, cssTarget };
+    });
+
+    function drawWheel() {
+      ctx.clearRect(0, 0, W, H);
+      const D2R = Math.PI / 180;
+      for (const seg of SEGS) {
+        const startRad  = seg.startDeg  * D2R - Math.PI / 2;
+        const endRad    = seg.endDeg    * D2R - Math.PI / 2;
+        const centerRad = seg.centerDeg * D2R - Math.PI / 2;
+        // Fill segment
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, R, startRad, endRad);
+        ctx.closePath();
+        ctx.fillStyle = seg.color;
+        ctx.fill();
+        ctx.strokeStyle = '#0d0d0f';
+        ctx.lineWidth = seg.angleDeg < 5 ? 0.5 : 1.5;
+        ctx.stroke();
+        // Label — skip if segment is too narrow for any text
+        if (seg.angleDeg < 4) continue;
+        const displayLabel = seg.angleDeg >= 25 ? seg.label : seg.short;
+        if (!displayLabel) continue;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(centerRad);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = seg.textColor;
+        const fs = seg.angleDeg >= 30 ? 10 : seg.angleDeg >= 15 ? 9 : 8;
+        ctx.font = `bold ${fs}px "Segoe UI", system-ui, sans-serif`;
+        ctx.fillText(displayLabel, R - 8, fs / 2 - 1);
+        ctx.restore();
+      }
+      // Outer ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      // Center circle
+      ctx.beginPath();
+      ctx.arc(cx, cy, 16, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ffd700';
+      ctx.fill();
+      ctx.strokeStyle = '#0d0d0f';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    drawWheel();
+
+    function getSegmentForReward(reward) {
+      for (let i = 0; i < SEGS.length; i++) {
+        if (reward <= SEGS[i].maxReward) return i;
+      }
+      return SEGS.length - 1;
+    }
+
+    let currentRotation = 0;
+    let isSpinning = false;
+
+    function spinToSegment(segIdx, onDone) {
+      const target = SEGS[segIdx].cssTarget;
+      const curMod = ((currentRotation % 360) + 360) % 360;
+      let delta = ((target - curMod + 360) % 360);
+      if (delta < 5) delta += 360;
+      const extra = (Math.floor(Math.random() * 5) + 5) * 360;
+      currentRotation += extra + delta;
+      canvas.style.transition = 'transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+      canvas.style.transform  = `rotate(${currentRotation}deg)`;
+      setTimeout(onDone, 5200);
+    }
+
+    async function spinWheel() {
+      if (isSpinning) return;
+      const btn = document.getElementById('spin-btn');
+      const resultEl = document.getElementById('spin-result');
+      resultEl.textContent = '';
+      resultEl.className = 'wheel-result';
+      isSpinning = true;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API_URL}/shop/spin_wheel`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        });
+        const data = await res.json();
+        if (data.error) {
+          resultEl.textContent = data.error;
+          resultEl.className = 'wheel-result error';
+          isSpinning = false;
+          btn.disabled = false;
+          return;
+        }
+        updateBuzzDisplay(data.buzz_coins);
+        const seg = getSegmentForReward(data.reward);
+        spinToSegment(seg, () => {
+          resultEl.textContent = `Gewonnen: ${fmt(data.reward)} Coins! Neues Guthaben: ${fmt(data.new_balance)}`;
+          resultEl.className = 'wheel-result win';
+          if (window.updateDisplay) window.updateDisplay(data.new_balance, null, null);
+          isSpinning = false;
+          btn.disabled = false;
+        });
+      } catch {
+        resultEl.textContent = 'Verbindungsfehler. Bitte erneut versuchen.';
+        resultEl.className = 'wheel-result error';
+        isSpinning = false;
+        btn.disabled = false;
+      }
+    }
+
     // ── Code einlösen ──
     document.getElementById('redeem-btn').addEventListener('click', async () => {
-      const code = document.getElementById('redeem-input').value.trim();
+      const code  = document.getElementById('redeem-input').value.trim();
       const msgEl = document.getElementById('redeem-msg');
-      const btn = document.getElementById('redeem-btn');
-
-      if (!code) {
-        showMsg(msgEl, 'Bitte einen Code eingeben.', 'error');
-        return;
-      }
-
+      const btn   = document.getElementById('redeem-btn');
+      if (!code) { showMsg(msgEl, 'Bitte einen Code eingeben.', 'error'); return; }
       btn.disabled = true;
       try {
         const res = await fetch(`${API_URL}/redeem_code`, {
@@ -252,21 +660,14 @@
         if (data.error) {
           showMsg(msgEl, data.error, 'error');
         } else {
-          showMsg(msgEl, `${data.message} – Neues Guthaben: ${Number(data.new_balance).toLocaleString('de-DE')} Coins`, 'success');
+          showMsg(msgEl, `${data.message} – Neues Guthaben: ${fmt(data.new_balance)} Coins`, 'success');
           document.getElementById('redeem-input').value = '';
-          if (data.new_balance !== undefined && window.updateDisplay) {
-            const lvl  = parseInt(localStorage.getItem('level') || '0', 10);
-            const gold = parseInt(localStorage.getItem('total_gold_earned') || '0', 10);
-            window.updateDisplay(data.new_balance, lvl, gold);
-          }
+          if (window.updateDisplay) window.updateDisplay(data.new_balance, null, null);
         }
       } catch {
         showMsg(msgEl, 'Verbindungsfehler. Bitte erneut versuchen.', 'error');
-      } finally {
-        btn.disabled = false;
-      }
+      } finally { btn.disabled = false; }
     });
-
     document.getElementById('redeem-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('redeem-btn').click();
     });
@@ -279,20 +680,11 @@
       const btn      = document.getElementById('admin-btn');
       const codeEl   = document.getElementById('generated-code');
       const metaEl   = document.getElementById('code-meta');
-
-      if (!amount || amount < 1) {
-        showMsg(msgEl, 'Bitte eine gültige Coin-Anzahl eingeben.', 'error');
-        return;
-      }
-      if (!password) {
-        showMsg(msgEl, 'Bitte das Admin-Passwort eingeben.', 'error');
-        return;
-      }
-
+      if (!amount || amount < 1) { showMsg(msgEl, 'Bitte eine gültige Coin-Anzahl eingeben.', 'error'); return; }
+      if (!password) { showMsg(msgEl, 'Bitte das Admin-Passwort eingeben.', 'error'); return; }
       btn.disabled = true;
       codeEl.classList.remove('show');
       metaEl.classList.remove('show');
-
       try {
         const res = await fetch(`${API_URL}/admin/create_coin_code`, {
           method: 'POST',
@@ -306,16 +698,14 @@
           msgEl.className = 'shop-msg';
           codeEl.textContent = data.code;
           codeEl.classList.add('show');
-          metaEl.textContent = `Wert: ${Number(data.value).toLocaleString('de-DE')} Coins`;
+          metaEl.textContent = `Wert: ${fmt(data.value)} Coins`;
           metaEl.classList.add('show');
           document.getElementById('admin-amount').value = '';
           document.getElementById('admin-password').value = '';
         }
       } catch {
         showMsg(msgEl, 'Verbindungsfehler. Bitte erneut versuchen.', 'error');
-      } finally {
-        btn.disabled = false;
-      }
+      } finally { btn.disabled = false; }
     });
   </script>
 </body>

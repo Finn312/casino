@@ -14,6 +14,7 @@ class User(Base):
     show_in_leaderboard = Column(Boolean, default=True)
     total_gold_earned = Column(Integer, default=0)
     last_dayle = Column(DateTime)
+    buzz_coins = Column(Integer, default=0)
     
 class game_history(Base):
     __tablename__="game_history"

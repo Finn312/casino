@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('routers/admin.py'\\).read\\(\\)\\); ast.parse\\(open\\('core/schemas.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('routers/general.py'\\).read\\(\\)\\); print\\('OK'\\)\")"
+    ]
+  }
+}

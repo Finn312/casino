@@ -108,5 +108,21 @@ class AdminCreateCodeRequest(BaseModel):
     username: str
     password: str
     new_balance: int
-    
+
+
+class AdminSetBuzzCoinsRequest(BaseModel):
+    username: str
+    password: str
+    player_name: str
+    amount: int
+
+
+class BuyCoinsRequest(BaseModel):
+    username: str
+    package: int  # 1, 3, 5, or 10 Buzz Coins
+
+
+class SpinWheelRequest(BaseModel):
+    username: str
+
 

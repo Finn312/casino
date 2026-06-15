@@ -20,12 +20,16 @@ def spin(request: SlotsRequest, db=Depends(get_db)):
         return {"error": "Nutzer nicht gefunden"}
     if request.bet > user.balance:
         return {"error": "Not enough credits"}
+    old_level = calculate_level(user.total_gold_earned)
     reels = spin_reels()
     win = slots_calculate_win(reels, request.bet)
     user.balance = user.balance - request.bet + win
     user.total_gold_earned += win
+    new_level = calculate_level(user.total_gold_earned)
+    if new_level > old_level:
+        user.buzz_coins += new_level
     db.commit()
-    return {"reels": reels, "win": win, "new_balance": user.balance,"total_gold_earned": user.total_gold_earned, "level": calculate_level(user.total_gold_earned)}
+    return {"reels": reels, "win": win, "new_balance": user.balance, "total_gold_earned": user.total_gold_earned, "level": new_level, "level_up": new_level > old_level, "buzz_coins": user.buzz_coins}
   
   
 #Blackjack Start Endpoint
@@ -44,10 +48,14 @@ def blackjack_start(request: BlackJackRequest, db=Depends(get_db)):
     game_state["active"] = True
     game_state["username"] = request.username
 
+    old_level = calculate_level(user.total_gold_earned)
     if hand_value(game_state["player_hand"]) == 21:
         win = request.bet * 2
         user.balance = user.balance - request.bet + win
         user.total_gold_earned += win
+        new_level = calculate_level(user.total_gold_earned)
+        if new_level > old_level:
+            user.buzz_coins += new_level
         db.commit()
         return {
             "player_hand": game_state["player_hand"],
@@ -58,7 +66,9 @@ def blackjack_start(request: BlackJackRequest, db=Depends(get_db)):
             "win": win,
             "new_balance": user.balance,
             "total_gold_earned": user.total_gold_earned,
-            "level": calculate_level(user.total_gold_earned),
+            "level": new_level,
+            "level_up": new_level > old_level,
+            "buzz_coins": user.buzz_coins,
         }
 
     db.commit()
@@ -126,8 +136,12 @@ def blackjack_stand(db=Depends(get_db)):
     else:
         win = 0
 
+    old_level = calculate_level(user.total_gold_earned)
     user.balance = user.balance - game_state["bet"] + win
     user.total_gold_earned += win
+    new_level = calculate_level(user.total_gold_earned)
+    if new_level > old_level:
+        user.buzz_coins += new_level
     db.commit()
     game_state["active"] = False
 
@@ -139,8 +153,10 @@ def blackjack_stand(db=Depends(get_db)):
         "gewinner": gewinner,
         "win": win,
         "new_balance": user.balance,
-        "total_gold_earned": user.total_gold_earned, 
-        "level": calculate_level(user.total_gold_earned)
+        "total_gold_earned": user.total_gold_earned,
+        "level": new_level,
+        "level_up": new_level > old_level,
+        "buzz_coins": user.buzz_coins,
     }
   
 
@@ -153,12 +169,16 @@ def roll(request: DiceRequest, db=Depends(get_db)):
     if request.bet > user.balance:
         return {"error": "Not enough credits"}
 
+    old_level = calculate_level(user.total_gold_earned)
     win, numbers = dice_calculate_win(request.bet, request.prediction, request.num_dice)
     user.balance = user.balance - request.bet + win
     user.total_gold_earned += win
+    new_level = calculate_level(user.total_gold_earned)
+    if new_level > old_level:
+        user.buzz_coins += new_level
     db.commit()
 
-    return {"win": win, "numbers": numbers, "new_balance": user.balance, "total_gold_earned": user.total_gold_earned, "level": calculate_level(user.total_gold_earned)}
+    return {"win": win, "numbers": numbers, "new_balance": user.balance, "total_gold_earned": user.total_gold_earned, "level": new_level, "level_up": new_level > old_level, "buzz_coins": user.buzz_coins}
 
 
 #Chicken Game Endpoint
@@ -189,12 +209,16 @@ def chicken_game_cashout(request: ChickenGameRequest, db=Depends(get_db)):
     if not user:
         return {"error": "Nutzer nicht gefunden"}
 
+    old_level = calculate_level(user.total_gold_earned)
     win = request.bet * request.multiplier - request.bet
     user.balance += int(win)
     user.total_gold_earned += int(request.bet * request.multiplier)
+    new_level = calculate_level(user.total_gold_earned)
+    if new_level > old_level:
+        user.buzz_coins += new_level
     db.commit()
 
-    return {"win": win, "new_balance": user.balance, "total_gold_earned": user.total_gold_earned, "level": calculate_level(user.total_gold_earned)}
+    return {"win": win, "new_balance": user.balance, "total_gold_earned": user.total_gold_earned, "level": new_level, "level_up": new_level > old_level, "buzz_coins": user.buzz_coins}
 
 
 
@@ -224,12 +248,16 @@ def mines_game_cashout(request: BombGameRequest, db=Depends(get_db)):
     if not user:
         return {"error": "Nutzer nicht gefunden"}
 
+    old_level = calculate_level(user.total_gold_earned)
     win = request.bet * request.multiplier - request.bet
     user.balance += int(win)
     user.total_gold_earned += int(request.bet * request.multiplier)
+    new_level = calculate_level(user.total_gold_earned)
+    if new_level > old_level:
+        user.buzz_coins += new_level
     db.commit()
 
-    return {"win": win, "new_balance": user.balance, "total_gold_earned": user.total_gold_earned, "level": calculate_level(user.total_gold_earned)}
+    return {"win": win, "new_balance": user.balance, "total_gold_earned": user.total_gold_earned, "level": new_level, "level_up": new_level > old_level, "buzz_coins": user.buzz_coins}
 
 
 
@@ -264,14 +292,21 @@ def roulette_game(request: RouletteRequest, db=Depends(get_db)):
     else:
         return {"error": "Ungültiger Wetttyp"}
 
+    old_level = calculate_level(user.total_gold_earned)
+    level_up = False
     if won:
         multiplier = 36 if request.bet_type == "number" else (3 if request.bet_type in ["1-12", "13-24", "25-36"] else 2)
         winnings = request.bet * multiplier - request.bet
         user.balance += int(winnings)
         user.total_gold_earned += int(request.bet * multiplier)
+        new_level = calculate_level(user.total_gold_earned)
+        if new_level > old_level:
+            user.buzz_coins += new_level
+            level_up = True
     else:
         winnings = -request.bet
         user.balance -= request.bet
+        new_level = old_level
 
     db.commit()
 
@@ -280,5 +315,7 @@ def roulette_game(request: RouletteRequest, db=Depends(get_db)):
         "won": won,
         "winnings": winnings,
         "new_balance": user.balance,
-        "level": calculate_level(user.total_gold_earned)
+        "level": new_level,
+        "level_up": level_up,
+        "buzz_coins": user.buzz_coins,
     }

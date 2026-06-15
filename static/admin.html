@@ -612,6 +612,21 @@
             <div class="code-reveal-meta" id="cc-meta"></div>
           </div>
 
+          <!-- Buzz Coins setzen -->
+          <div class="action-panel">
+            <h3>⚡ Buzz Coins setzen</h3>
+            <div class="form-group" style="margin:0">
+              <label>Spielername</label>
+              <input type="text" id="bc-player" placeholder="Username">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Buzz Coins</label>
+              <input type="number" id="bc-amount" placeholder="z.B. 10" min="0">
+            </div>
+            <button class="btn-outline" onclick="setBuzzCoins()">Buzz Coins setzen</button>
+            <div class="action-feedback" id="bc-feedback"></div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -1020,6 +1035,27 @@
         setFeedback("cc-feedback", data.error || "Fehler.", false);
       }
     } catch { setFeedback("cc-feedback", "Server nicht erreichbar.", false); }
+    finally { btn.disabled = false; }
+  }
+
+  // ── Set Buzz Coins ────────────────────────────────────────────────────────
+
+  async function setBuzzCoins() {
+    const player = document.getElementById("bc-player").value.trim();
+    const amount = document.getElementById("bc-amount").value;
+    if (!player || amount === "") { setFeedback("bc-feedback", "Alle Felder ausfüllen.", false); return; }
+
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    try {
+      const { ok, data } = await adminPost("/admin/set_buzz_coins", { player_name: player, amount: parseInt(amount) });
+      if (ok && !data.error) {
+        setFeedback("bc-feedback", `✓ Buzz Coins für "${player}" auf ${amount} gesetzt.`, true);
+        showToast(`${player} hat jetzt ${amount} Buzz Coins.`);
+      } else {
+        setFeedback("bc-feedback", data.detail || data.error || "Fehler.", false);
+      }
+    } catch { setFeedback("bc-feedback", "Server nicht erreichbar.", false); }
     finally { btn.disabled = false; }
   }
 
