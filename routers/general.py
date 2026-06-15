@@ -192,43 +192,64 @@ def get_dayle_status(username: str, db=Depends(get_db)):
     return {"can_spin": True, "remaining_time": 0}
 
 
-COIN_PACKAGES = {
-    1:  5_000,
-    3:  16_000,
-    5:  28_000,
-    10: 60_000,
-}
+TIER_COIN_PACKAGES = [
+    {1: 5_000,  3: 16_000,  5:  28_000, 10:  60_000},  # lv  1-10
+    {1: 10_000, 3: 32_000,  5:  56_000, 10: 120_000},  # lv 11-20
+    {1: 18_000, 3: 57_000,  5: 100_000, 10: 210_000},  # lv 21-30
+    {1: 28_000, 3: 88_000,  5: 155_000, 10: 325_000},  # lv 31-40
+    {1: 40_000, 3: 125_000, 5: 220_000, 10: 460_000},  # lv 41-50
+]
+
+WHEEL_BREAKPOINTS = [
+    [50,  500,  5_000,  25_000,  100_000,   300_000,   500_000],  # lv  1-10
+    [100, 900,  9_000,  45_000,  180_000,   540_000,   900_000],  # lv 11-20
+    [180, 1_600, 16_000, 80_000,  320_000,   960_000, 1_600_000],  # lv 21-30
+    [300, 2_800, 28_000, 140_000, 560_000, 1_680_000, 2_800_000],  # lv 31-40
+    [500, 5_000, 50_000, 250_000, 1_000_000, 3_000_000, 5_000_000],  # lv 41-50
+]
+
+
+def _get_tier(level: int) -> int:
+    if level <= 10: return 0
+    if level <= 20: return 1
+    if level <= 30: return 2
+    if level <= 40: return 3
+    return 4
+
 
 @router.post("/shop/buy_coins")
 def shop_buy_coins(request: BuyCoinsRequest, db=Depends(get_db)):
     user = db.query(User).filter(User.username == request.username).first()
     if not user:
         return {"error": "Nutzer nicht gefunden"}
-    if request.package not in COIN_PACKAGES:
+    tier = _get_tier(calculate_level(user.total_gold_earned))
+    packages = TIER_COIN_PACKAGES[tier]
+    if request.package not in packages:
         return {"error": "Ungültiges Paket"}
     if user.buzz_coins < request.package:
         return {"error": f"Nicht genug Buzz Coins (benötigt: {request.package})"}
-    coins = COIN_PACKAGES[request.package]
+    coins = packages[request.package]
     user.buzz_coins -= request.package
     user.balance += coins
     db.commit()
-    return {"new_balance": user.balance, "buzz_coins": user.buzz_coins}
+    return {"new_balance": user.balance, "buzz_coins": user.buzz_coins, "coins_received": coins}
 
 
-def _wheel_reward() -> int:
+def _wheel_reward(level: int) -> int:
+    bp = WHEEL_BREAKPOINTS[_get_tier(level)]
     r = random.random()
-    if r < 0.18:        # 18 %
-        return random.randint(55, 550)
-    elif r < 0.40:      # 22 %
-        return random.randint(550, 5_500)
-    elif r < 0.55:      # 15 %
-        return random.randint(5_500, 27_500)
-    elif r < 0.85:      # 30 %
-        return random.randint(27_500, 110_000)
-    elif r < 0.96:      # 11 %
-        return random.randint(110_000, 330_000)
-    else:               #  4 %
-        return random.randint(330_000, 550_000)
+    if r < 0.18:
+        return random.randint(bp[0], bp[1])
+    elif r < 0.40:
+        return random.randint(bp[1], bp[2])
+    elif r < 0.55:
+        return random.randint(bp[2], bp[3])
+    elif r < 0.85:
+        return random.randint(bp[3], bp[4])
+    elif r < 0.96:
+        return random.randint(bp[4], bp[5])
+    else:
+        return random.randint(bp[5], bp[6])
 
 
 @router.post("/shop/spin_wheel")
@@ -238,7 +259,8 @@ def shop_spin_wheel(request: SpinWheelRequest, db=Depends(get_db)):
         return {"error": "Nutzer nicht gefunden"}
     if user.buzz_coins < 5:
         return {"error": "Nicht genug Buzz Coins (benötigt: 5)"}
-    reward = _wheel_reward()
+    level = calculate_level(user.total_gold_earned)
+    reward = _wheel_reward(level)
     user.buzz_coins -= 5
     user.balance += reward
     db.commit()
