@@ -26,6 +26,15 @@ class ChickenGameRequest(BaseModel):
   multiplier: float   
 
 
+class BombGameRequest(BaseModel):
+    username: str
+    bet: int
+    multiplier: float
+    bombs: int
+    revealed: int
+    
+
+
 #Auth
 class LoginRequest(BaseModel):
     username: str
@@ -85,3 +94,5 @@ class AdminCreateCodeRequest(BaseModel):
     username: str
     password: str
     new_balance: int
+    
+

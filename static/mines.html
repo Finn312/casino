@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mines – Buzz Casino</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #0a0a0a;
+            background-image:
+                radial-gradient(ellipse at 50% 38%, rgba(20,0,0,0.5) 0%, transparent 60%),
+                url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%22100%22%3E%3Ctext%20x%3D%228%22%20y%3D%2244%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A0%3C%2Ftext%3E%3Ctext%20x%3D%2258%22%20y%3D%2244%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A5%3C%2Ftext%3E%3Ctext%20x%3D%228%22%20y%3D%2292%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A6%3C%2Ftext%3E%3Ctext%20x%3D%2258%22%20y%3D%2292%22%20font-size%3D%2228%22%20fill%3D%22%23151515%22%20font-family%3D%22serif%22%3E%E2%99%A3%3C%2Ftext%3E%3C%2Fsvg%3E");
+            background-size: 100% 100%, 100px 100px;
+            background-attachment: fixed;
+            background-repeat: no-repeat, repeat;
+            color: #f0f0f0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 640px;
+            background: rgba(13,13,13,0.92);
+            border: 1px solid #232323;
+            border-radius: 22px;
+            padding: 2rem 2rem 2.5rem;
+            box-shadow: 0 0 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(240,192,64,0.07);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .back-link {
+            align-self: flex-start;
+            color: #555; font-size: 0.82rem;
+            text-decoration: none; margin-bottom: 1.25rem;
+            transition: color 0.15s;
+        }
+        .back-link:hover { color: #f0c040; }
+
+        h1 { color: #f0c040; font-size: 1.8rem; margin-bottom: 0.4rem; letter-spacing: 0.02em; }
+        #balance-display { font-size: 1.05rem; color: #aaa; margin-bottom: 1.25rem; }
+
+        /* ══════════════════════════════
+           Mines Grid
+        ══════════════════════════════ */
+        .mines-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Card flip */
+        .card {
+            aspect-ratio: 1;
+            perspective: 700px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .card.disabled { cursor: not-allowed; pointer-events: none; }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        /* Unrevealed card */
+        .card-front {
+            background: linear-gradient(145deg, #1c1c2e, #14142a);
+            border: 2px solid #28283c;
+            font-size: 1.6rem;
+            color: #28283c;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04);
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+        .card:not(.disabled):not(.flipped):hover .card-front {
+            border-color: #f0c040;
+            box-shadow: 0 4px 18px rgba(240,192,64,0.22), inset 0 1px 0 rgba(255,255,255,0.07);
+            background: linear-gradient(145deg, #22223a, #1a1a32);
+        }
+
+        /* Revealed card back */
+        .card-back {
+            transform: rotateY(180deg);
+            font-size: 2rem;
+        }
+        .card-back.safe {
+            background: linear-gradient(145deg, #0b2a18, #091f12);
+            border: 2px solid #22c55e;
+            box-shadow: 0 0 20px rgba(34,197,94,0.38), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+        .card-back.bomb {
+            background: linear-gradient(145deg, #2a0c0c, #1e0808);
+            border: 2px solid #ef4444;
+            box-shadow: 0 0 20px rgba(239,68,68,0.42), inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        .card-back.bomb-hit {
+            animation: bombPulse 0.5s ease;
+        }
+        @keyframes bombPulse {
+            0%   { box-shadow: 0 0 0   rgba(239,68,68,0); }
+            40%  { box-shadow: 0 0 50px rgba(239,68,68,1); }
+            100% { box-shadow: 0 0 20px rgba(239,68,68,0.42); }
+        }
+
+        /* Red flash over entire grid on bomb hit */
+        .mines-grid.bomb-flash::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 14px;
+            background: rgba(239,68,68,0.18);
+            pointer-events: none;
+            animation: gridFlash 0.55s ease forwards;
+        }
+        .mines-grid { position: relative; }
+        @keyframes gridFlash {
+            0%   { opacity: 0; }
+            25%  { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* ══════════════════════════════
+           Message
+        ══════════════════════════════ */
+        #message {
+            font-size: 1.05rem;
+            color: #f0c040;
+            min-height: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            transition: color 0.2s;
+        }
+        #message.loss { color: #ef4444; }
+        #message.win  { color: #22c55e; }
+
+        /* ══════════════════════════════
+           Controls
+        ══════════════════════════════ */
+        .controls { width: 100%; display: flex; flex-direction: column; gap: 1rem; align-items: center; }
+
+        .field-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #666;
+            font-weight: 600;
+        }
+
+        /* Chip bet buttons */
+        .bet-section { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+        .chips { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
+
+        .chip {
+            width: 54px; height: 54px; border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.1);
+            cursor: pointer; font-size: 0.85rem; font-weight: 800; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, opacity 0.15s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.12);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .chip::after {
+            content: ''; position: absolute; inset: 5px; border-radius: 50%;
+            border: 1.5px dashed rgba(255,255,255,0.16); pointer-events: none;
+        }
+        .chip:hover:not([disabled]) { transform: translateY(-3px) scale(1.07); }
+        .chip.active { border-color: #f0c040; box-shadow: 0 0 0 3px rgba(240,192,64,0.35), 0 6px 18px rgba(0,0,0,0.7); }
+        .chip[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+        .chip-blue   { background: linear-gradient(160deg,#1565c0,#1e88e5); }
+        .chip-green  { background: linear-gradient(160deg,#2e7d32,#43a047); }
+        .chip-orange { background: linear-gradient(160deg,#bf360c,#fb8c00); }
+        .chip-red    { background: linear-gradient(160deg,#b71c1c,#e53935); }
+
+        .custom-bet-wrap {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .custom-bet-input {
+            background: #1a1a24;
+            border: 1.5px solid #f0c040;
+            border-radius: 8px;
+            color: #f0c040;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            width: 140px;
+            text-align: center;
+            outline: none;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        .custom-bet-input::-webkit-outer-spin-button,
+        .custom-bet-input::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+        .custom-bet-input:focus { box-shadow: 0 0 0 3px rgba(240,192,64,0.25); }
+
+        /* Bomb slider */
+        .slider-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.55rem;
+            width: 100%;
+            max-width: 320px;
+        }
+        .slider-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .slider-value {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #f0c040;
+        }
+        .bomb-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #f0c040 var(--fill, 10%), #2a2a3e var(--fill, 10%));
+            outline: none;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .bomb-slider:disabled { opacity: 0.4; cursor: not-allowed; }
+        .bomb-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #f0c040;
+            border: 3px solid #0a0a0a;
+            box-shadow: 0 0 7px rgba(240,192,64,0.6);
+            cursor: pointer;
+        }
+        .bomb-slider::-moz-range-thumb {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #f0c040;
+            border: 3px solid #0a0a0a;
+            box-shadow: 0 0 7px rgba(240,192,64,0.6);
+            cursor: pointer;
+        }
+        .mult-preview {
+            font-size: 0.76rem;
+            color: #555;
+            text-align: center;
+        }
+        .mult-preview b { color: #f0c040; }
+
+        /* Bottom action buttons */
+        .btn-row {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .start-btn {
+            background: linear-gradient(160deg,#c89618,#f0c040);
+            color: #0a0a0a; font-weight: 900; font-size: 1rem;
+            padding: 0.72rem 2.2rem; border-radius: 10px; border: none;
+            cursor: pointer; transition: transform 0.12s, box-shadow 0.15s, opacity 0.15s;
+            box-shadow: 0 4px 14px rgba(240,192,64,0.3);
+            letter-spacing: 0.04em; min-width: 160px;
+        }
+        .start-btn:hover:not([disabled]) { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(240,192,64,0.45); }
+        .start-btn:active:not([disabled]) { transform: translateY(0); }
+        .start-btn[disabled] { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+        .cashout-btn {
+            background: linear-gradient(160deg,#14532d,#22c55e);
+            color: #fff; font-weight: 800; font-size: 0.88rem;
+            padding: 0.72rem 1.4rem; border-radius: 10px; border: none;
+            cursor: pointer; transition: transform 0.12s, box-shadow 0.15s, opacity 0.15s;
+            box-shadow: 0 4px 14px rgba(34,197,94,0.28);
+            text-align: center; line-height: 1.4; min-width: 140px;
+        }
+        .cashout-btn:hover:not([disabled]) { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(34,197,94,0.45); }
+        .cashout-btn[disabled] { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
+        @media (max-width: 520px) {
+            body { padding: 1rem 0.5rem; }
+            .wrapper { padding: 1.25rem 0.75rem 1.75rem; border-radius: 16px; }
+            h1 { font-size: 1.4rem; }
+            #balance-display { font-size: 0.95rem; margin-bottom: 1rem; }
+            .mines-grid { gap: 5px; }
+            .card-face { border-radius: 7px; }
+            .card-back { font-size: 1.5rem; }
+            .card-front { font-size: 1.2rem; }
+            .chip { width: 48px; height: 48px; font-size: 0.78rem; }
+        }
+    </style>
+</head>
+<body>
+    <script src="/static/navbar.js"></script>
+    <div class="wrapper">
+        <a class="back-link" href="/static/index.html">← Zurück zur Lobby</a>
+        <h1>💣 Mines</h1>
+        <div id="balance-display">Credits: —</div>
+
+        <div class="mines-grid" id="mines-grid"></div>
+
+        <div id="message"></div>
+
+        <div class="controls">
+            <!-- Bet -->
+            <div class="bet-section">
+                <span class="field-label">Einsatz</span>
+                <div class="chips" id="chips-row">
+                    <button class="chip chip-blue active" onclick="selectChip(this,10)">10</button>
+                    <button class="chip chip-green" onclick="selectChip(this,25)">25</button>
+                    <button class="chip chip-orange" onclick="selectChip(this,50)">50</button>
+                    <button class="chip chip-red" onclick="selectChip(this,100)">100</button>
+                </div>
+                <div class="custom-bet-wrap" id="custom-bet-wrap">
+                    <input type="number" class="custom-bet-input" id="custom-bet" min="1" value="10">
+                </div>
+            </div>
+
+            <!-- Bomb count -->
+            <div class="slider-section">
+                <div class="slider-header">
+                    <span class="field-label">Bomben</span>
+                    <span class="slider-value"><span id="bomb-count">3</span> 💣</span>
+                </div>
+                <input type="range" class="bomb-slider" id="bomb-slider" min="1" max="20" value="3">
+                <div class="mult-preview">Nächste Karte: <b id="next-mult">—</b></div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="btn-row">
+                <button class="cashout-btn" id="cashout-btn" disabled onclick="cashOut()">
+                    CASHOUT<br><span id="cashout-mult">1.00x</span>
+                </button>
+                <button class="start-btn" id="start-btn" disabled onclick="startGame()">
+                    SPIEL STARTEN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://127.0.0.1:8000'
+            : 'https://finndev.me';
+
+        let balance = 0, username = '';
+        let bet = 10, bombs = 3;
+        let gameActive = false, busy = false;
+        let revealed = 0, multiplier = 1.0;
+
+        /* Mirror of server's calculate_multiplier */
+        function calcMult(b, r) {
+            let p = 1.0;
+            for (let i = 0; i < r; i++) p *= (25 - b - i) / (25 - i);
+            return Math.round((1 / p) * 0.97 * 100) / 100;
+        }
+
+        function updateBalance() {
+            document.getElementById('balance-display').textContent = 'Credits: ' + balance;
+        }
+
+        function updateSlider() {
+            const pct = ((bombs - 1) / 19) * 100;
+            document.getElementById('bomb-slider').style.setProperty('--fill', pct + '%');
+            document.getElementById('bomb-count').textContent = bombs;
+            refreshNextMult();
+        }
+
+        function refreshNextMult() {
+            const next = calcMult(bombs, revealed + 1);
+            document.getElementById('next-mult').textContent = next.toFixed(2) + 'x';
+        }
+
+        function updateCashout() {
+            const enabled = gameActive && revealed >= 3;
+            document.getElementById('cashout-btn').toggleAttribute('disabled', !enabled);
+            document.getElementById('cashout-mult').textContent = multiplier.toFixed(2) + 'x';
+        }
+
+        function selectChip(el, val) {
+            if (gameActive) return;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            bet = val;
+        }
+
+        function setControlsLocked(locked) {
+            document.querySelectorAll('.chip, #bomb-slider').forEach(el =>
+                locked ? el.setAttribute('disabled', '') : el.removeAttribute('disabled'));
+            document.getElementById('start-btn').toggleAttribute('disabled', locked);
+        }
+
+        /* ── Grid ── */
+        function buildGrid() {
+            const grid = document.getElementById('mines-grid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 25; i++) {
+                const card = document.createElement('div');
+                card.className = 'card disabled';
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-face card-front">◇</div>
+                        <div class="card-face card-back safe"></div>
+                    </div>`;
+                card.addEventListener('click', () => clickTile(card));
+                grid.appendChild(card);
+            }
+        }
+
+        function enableTiles() {
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('disabled'));
+        }
+
+        function disableAllTiles() {
+            document.querySelectorAll('.card').forEach(c => c.classList.add('disabled'));
+        }
+
+        function resetGrid() {
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.remove('flipped', 'disabled');
+                const inner = card.querySelector('.card-inner');
+                inner.style.transition = 'transform 0.42s cubic-bezier(0.4,0,0.2,1)';
+                const back = card.querySelector('.card-back');
+                back.className = 'card-face card-back safe';
+                back.textContent = '';
+                card.classList.add('disabled');
+            });
+        }
+
+        /* ── Game logic ── */
+        async function startGame() {
+            if (busy || gameActive) return;
+            if (bet <= 0 || !Number.isFinite(bet)) {
+                showMsg('Ungültiger Einsatz!', '');
+                return;
+            }
+            if (bet > balance) {
+                showMsg('Nicht genug Credits!', '');
+                return;
+            }
+
+            gameActive = true;
+            revealed = 0;
+            multiplier = 1.0;
+
+            showMsg('', '');
+            setControlsLocked(true);
+            resetGrid();
+            enableTiles();
+            updateCashout();
+            refreshNextMult();
+        }
+
+        async function clickTile(card) {
+            if (!gameActive || busy || card.classList.contains('flipped') || card.classList.contains('disabled')) return;
+            busy = true;
+            card.classList.add('disabled');
+
+            let data;
+            try {
+                const res = await fetch(`${API_URL}/mines_game`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, bet, bombs, revealed, multiplier })
+                });
+                data = await res.json();
+            } catch {
+                showMsg('Verbindungsfehler', '');
+                card.classList.remove('disabled');
+                busy = false;
+                return;
+            }
+
+            if (data.error) {
+                showMsg(data.error, '');
+                card.classList.remove('disabled');
+                busy = false;
+                return;
+            }
+
+            const back = card.querySelector('.card-back');
+
+            if (data.result === 'win') {
+                back.className = 'card-face card-back safe';
+                back.textContent = '💎';
+                card.classList.add('flipped');
+
+                revealed++;
+                multiplier = data.multiplier;
+                balance = data.new_balance;
+
+                updateBalance();
+                updateCashout();
+                refreshNextMult();
+                showMsg(`💎 Sicher! ${revealed} aufgedeckt · ${multiplier.toFixed(2)}x`, 'win');
+
+                /* All safe tiles found */
+                if (revealed === 25 - bombs) {
+                    showMsg('🏆 Alle sicheren Felder! Auto-Cashout…', 'win');
+                    busy = false;
+                    await cashOut();
+                    return;
+                }
+            } else {
+                /* Bomb hit */
+                back.className = 'card-face card-back bomb bomb-hit';
+                back.textContent = '💣';
+                card.classList.add('flipped');
+
+                gameActive = false;
+                disableAllTiles();
+
+                /* Grid flash */
+                const grid = document.getElementById('mines-grid');
+                grid.classList.add('bomb-flash');
+                setTimeout(() => grid.classList.remove('bomb-flash'), 600);
+
+                balance = data.new_balance;
+                showMsg(`💥 Bombe! -${bet} Credits`, 'loss');
+
+                /* Cascade-reveal remaining tiles as bombs */
+                await revealBombs(card);
+
+                updateBalance();
+                updateCashout();
+                setControlsLocked(false);
+                saveHistory(false);
+
+                setTimeout(() => {
+                    resetGrid();
+                    revealed = 0;
+                    multiplier = 1.0;
+                    showMsg('', '');
+                    refreshNextMult();
+                    updateCashout();
+                }, 2000);
+            }
+
+            busy = false;
+        }
+
+        function revealBombs(hitCard) {
+            return new Promise(resolve => {
+                const unflipped = [...document.querySelectorAll('.card:not(.flipped)')];
+                let done = 0;
+                if (unflipped.length === 0) { resolve(); return; }
+                unflipped.forEach((c, i) => {
+                    setTimeout(() => {
+                        const b = c.querySelector('.card-back');
+                        b.className = 'card-face card-back bomb';
+                        b.textContent = '💣';
+                        c.classList.add('flipped');
+                        if (++done === unflipped.length) resolve();
+                    }, 40 + i * 55);
+                });
+            });
+        }
+
+        async function cashOut() {
+            if (busy || !gameActive || revealed < 1) return;
+            busy = true;
+
+            let data;
+            try {
+                const res = await fetch(`${API_URL}/mines_game_cashout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, bet, bombs, revealed, multiplier })
+                });
+                data = await res.json();
+            } catch {
+                showMsg('Verbindungsfehler', '');
+                busy = false;
+                return;
+            }
+
+            if (data.error) {
+                showMsg(data.error, '');
+                busy = false;
+                return;
+            }
+
+            gameActive = false;
+            disableAllTiles();
+            balance = data.new_balance;
+
+            if (data.total_gold_earned !== undefined) {
+                localStorage.setItem('total_gold_earned', data.total_gold_earned);
+                localStorage.setItem('level', data.level);
+                if (typeof updateDisplay === 'function') {
+                    updateDisplay(balance, data.level, data.total_gold_earned);
+                }
+            }
+
+            const net = Math.floor(data.win);
+            updateBalance();
+            updateCashout();
+            setControlsLocked(false);
+            showMsg(`💰 Cashout! +${net} Credits (${multiplier.toFixed(2)}x)`, 'win');
+            saveHistory(true);
+
+            setTimeout(() => {
+                resetGrid();
+                revealed = 0;
+                multiplier = 1.0;
+                showMsg('', '');
+                refreshNextMult();
+                updateCashout();
+            }, 2000);
+
+            busy = false;
+        }
+
+        function showMsg(text, type) {
+            const el = document.getElementById('message');
+            el.textContent = text;
+            el.className = type || '';
+        }
+
+        async function saveHistory(win) {
+            try {
+                await fetch(`${API_URL}/SaveHistory`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, game: 'mines', balance, win, time: new Date().toISOString() })
+                });
+            } catch {}
+        }
+
+        /* ── Init ── */
+        (async () => {
+            username = localStorage.getItem('username');
+            if (!username) { window.location.href = '/static/login.html'; return; }
+
+            try {
+                const res  = await fetch(`${API_URL}/get_balance?username=${encodeURIComponent(username)}`);
+                const data = await res.json();
+                if (data.id_banned) {
+                    localStorage.removeItem('username');
+                    window.location.href = '/static/login.html';
+                    return;
+                }
+                balance = data.balance;
+                if (data.total_gold_earned !== undefined) {
+                    localStorage.setItem('total_gold_earned', data.total_gold_earned);
+                    localStorage.setItem('level', data.level);
+                    if (typeof updateDisplay === 'function') {
+                        updateDisplay(balance, data.level, data.total_gold_earned);
+                    }
+                }
+                updateBalance();
+                document.getElementById('start-btn').removeAttribute('disabled');
+            } catch {
+                document.getElementById('balance-display').textContent = 'Fehler beim Laden';
+                return;
+            }
+
+            /* Custom input setting */
+            try {
+                const sRes  = await fetch(`${API_URL}/get_settings?username=${encodeURIComponent(username)}`);
+                const sData = await sRes.json();
+                if (!sData.error && sData.custom_input) {
+                    document.getElementById('custom-bet-wrap').style.display = 'flex';
+                    document.getElementById('chips-row').style.display = 'none';
+                    const el = document.getElementById('custom-bet');
+                    bet = parseInt(el.value) || 10;
+                    el.addEventListener('input', () => {
+                        if (!gameActive) bet = parseInt(el.value) || 1;
+                    });
+                }
+            } catch {}
+
+            /* Slider setup */
+            const slider = document.getElementById('bomb-slider');
+            bombs = parseInt(slider.value);
+            updateSlider();
+            slider.addEventListener('input', () => {
+                if (gameActive) return;
+                bombs = parseInt(slider.value);
+                updateSlider();
+            });
+
+            buildGrid();
+            updateCashout();
+        })();
+    </script>
+    <script src="/static/murmel.js"></script>
+</body>
+</html>

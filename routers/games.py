@@ -2,11 +2,13 @@ from fastapi import APIRouter, Depends
 from .gamelogic.slots import spin_reels, calculate_win as slots_calculate_win
 from .gamelogic.blackjack import shuffle_deck, hand_value, dealer_draw, check_winner, game_state
 from .gamelogic.dice import calculate_win as dice_calculate_win
+from .gamelogic.bombs import calculate_multiplier
 from database.database import get_db
 from database.models import User
 import random
-from core.schemas import SlotsRequest, BlackJackRequest, DiceRequest, ChickenGameRequest
+from core.schemas import SlotsRequest, BlackJackRequest, DiceRequest, ChickenGameRequest, BombGameRequest
 from core.utilities import calculate_level
+
 
 router = APIRouter()
 
@@ -183,6 +185,41 @@ def chicken_game(request: ChickenGameRequest, db=Depends(get_db)):
 #ChickenGame cashout Endpoint
 @router.post("/chicken_game_cashout")
 def chicken_game_cashout(request: ChickenGameRequest, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+
+    win = request.bet * request.multiplier - request.bet
+    user.balance += int(win)
+    user.total_gold_earned += int(request.bet * request.multiplier)
+    db.commit()
+
+    return {"win": win, "new_balance": user.balance, "total_gold_earned": user.total_gold_earned, "level": calculate_level(user.total_gold_earned)}
+
+
+
+@router.post("/mines_game")
+def mines_game(request: BombGameRequest, db=Depends(get_db)):
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        return {"error": "Nutzer nicht gefunden"}
+    if request.bet > user.balance:
+        return {"error": "Not enough credits"}
+    safe_tiles = 25 - request.bombs - request.revealed
+    remaining_tiles = 25 - request.revealed
+    chance_safe = safe_tiles / remaining_tiles
+    if random.random() < chance_safe:
+        result = "win"
+        new_multiplier = calculate_multiplier(request.bombs, request.revealed + 1)
+    else:
+        result = "lose"
+        user.balance -= request.bet
+        db.commit()
+    return {"result": result, "new_balance": user.balance, "multiplier": new_multiplier if result == "win" else 0}
+
+
+@router.post("/mines_game_cashout")
+def mines_game_cashout(request: BombGameRequest, db=Depends(get_db)):
     user = db.query(User).filter(User.username == request.username).first()
     if not user:
         return {"error": "Nutzer nicht gefunden"}

@@ -319,6 +319,24 @@ nav a:hover {
   border-color: var(--gold-dim);
 }
 
+/* ── Locked game card ── */
+.card--locked {
+  opacity: 0.5;
+  cursor: default;
+}
+.card--locked:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border);
+}
+.card--locked:hover::before { opacity: 0; }
+.card--locked .btn-play {
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: default;
+  pointer-events: none;
+}
+
 /* ── Toast notification ── */
 .toast {
   position: fixed;

@@ -12,7 +12,7 @@
     { level: 3,  gold: 5000,    bonus: 2500,   feature: 'Autospin + höherer Daily' },
     { level: 4,  gold: 10000,   bonus: 5000,   feature: 'Chicken Road' },
     { level: 5,  gold: 20000,   bonus: 10000,  feature: 'Input Bet' },
-    { level: 6,  gold: 50000,   bonus: 25000,  feature: '—' },
+    { level: 6,  gold: 50000,   bonus: 25000,  feature: 'Mines' },
     { level: 7,  gold: 100000,  bonus: 50000,  feature: '—' },
     { level: 8,  gold: 250000,  bonus: 125000, feature: 'Roulette' },
     { level: 9,  gold: 500000,  bonus: 250000, feature: 'Poker' },

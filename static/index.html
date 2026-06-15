@@ -20,7 +20,7 @@
   <main class="games" id="games">
     <div class="section-header">
       <h2>Games</h2>
-      <span>6 available</span>
+      <span>7 available</span>
     </div>
 
     <div class="games-grid" id="games-grid"></div>
@@ -214,6 +214,13 @@
         tag: 'Arcade',
         requiredLevel:4
       },
+      {
+        icon: '💣',
+        name: 'Mines',
+        desc: 'Decke sichere Felder auf und cash out bevor du eine Bombe triffst!',
+        tag: 'Arcade',
+        requiredLevel:6
+      },
     ];
 
     // Render game cards
@@ -223,16 +230,20 @@
     }
 
     const grid = document.getElementById('games-grid');
+    const level = parseInt(localStorage.getItem("level")) || 0;
 
     GAMES.forEach(game => {
+      const locked = game.requiredLevel > level;
       const card = document.createElement('article');
-      card.className = 'card';
+      card.className = 'card' + (locked ? ' card--locked' : '');
       card.innerHTML = `
         <span class="card-icon">${game.icon}</span>
         <div class="card-name">${game.name}</div>
         <div class="card-desc">${game.desc}</div>
         <span class="card-tag">${game.tag}</span>
-        <button class="btn-play" data-game="${game.name}">Play</button>
+        <button class="btn-play" data-game="${game.name}">
+          ${locked ? `🔒 Level ${game.requiredLevel}` : 'Play'}
+        </button>
       `;
       grid.appendChild(card);
     });
@@ -252,7 +263,6 @@
       const btn = e.target.closest('.btn-play');
       if (!btn) return;
 
-      const level = parseInt(localStorage.getItem("level")) || 0;
       const game = GAMES.find(g => g.name === btn.dataset.game);
 
       if (game && game.requiredLevel > level) {
@@ -274,6 +284,10 @@
       }
       if (btn.dataset.game == "Chicken Road") {
           window.location.href = "/static/chicken.html";
+          return;
+      }
+      if (btn.dataset.game == "Mines") {
+          window.location.href = "/static/mines.html";
           return;
       }
       showToast(`${btn.dataset.game} — Coming soon!`);
