@@ -405,13 +405,13 @@
       document.getElementById('nv-progress-fill').style.width = '100%';
       document.getElementById('nv-progress-xp').textContent = 'MAX';
     } else {
-      const cur    = THRESHOLDS[level] || 0;
-      const nxt    = THRESHOLDS[level + 1] || 1;
+      const cur    = THRESHOLDS[level];
+      const nxt    = THRESHOLDS[level + 1];
       const earned = Math.max(0, totalGold - cur);
       const needed = nxt - cur;
       const pct    = Math.min(100, (earned / needed) * 100);
       document.getElementById('nv-progress-fill').style.width = pct + '%';
-      document.getElementById('nv-progress-xp').textContent   = fmt(earned) + ' / ' + fmt(needed);
+      document.getElementById('nv-progress-xp').textContent   = fmt(totalGold) + ' / ' + fmt(nxt);
     }
 
     const tbody = document.getElementById('nv-level-tbody');
