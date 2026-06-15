@@ -926,6 +926,7 @@
         <th>ID</th>
         <th>Username</th>
         <th>Balance</th>
+        <th>Level</th>
         <th>Admin</th>
         <th>Gebannt</th>
         <th>Leaderboard</th>
@@ -938,6 +939,7 @@
         <td style="color:var(--muted)">${esc(String(u.id ?? "—"))}</td>
         <td style="font-weight:600">${esc(u.username)}</td>
         <td style="color:var(--gold-light);font-weight:700">${formatBalance(u.balance)}</td>
+        <td style="color:var(--muted);font-weight:600">${u.level ?? "—"}</td>
         <td>${u.is_admin ? '<span class="badge badge-yes">Ja</span>' : '<span class="badge badge-no">Nein</span>'}</td>
         <td>${banned ? '<span class="badge badge-ban">Gebannt</span>' : '<span class="badge badge-no">Nein</span>'}</td>
         <td>${inLb ? '<span class="badge badge-yes">Ja</span>' : '<span class="badge badge-no">Nein</span>'}</td>

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from database.database import get_db
-from database.models import User, game_history, coin_codes
+from database.models import User, game_history
 from database import models
 import bcrypt
 import secrets
@@ -42,15 +42,15 @@ def admin_set_level(request: AdminSetLevelRequest, db=Depends(get_db)):
     if not bcrypt.checkpw(request.password.encode(), admin_user.password.encode()):
         return {"error": "Falsches Passwort"}
 
-    if request.level < 0 or request.level > 10:
-        return {"error": "Level muss zwischen 0 und 10 liegen"}
+    if request.level < 0 or request.level > 50:
+        return {"error": "Level muss zwischen 0 und 50 liegen"}
 
     player = db.query(User).filter(User.username == request.player_name).first()
     if not player:
         return {"error": "Player not found"}
 
-    thresholds = [0, 500, 2000, 5000, 10000, 20000, 50000, 100000, 250000, 500000, 1000000]
-    player.total_gold_earned = thresholds[request.level]
+    from core.utilities import LEVEL_THRESHOLDS
+    player.total_gold_earned = LEVEL_THRESHOLDS[request.level]
     db.commit()
 
     return {
@@ -137,6 +137,7 @@ def admin_get_users(username: str, password: str, db=Depends(get_db)):
     if not bcrypt.checkpw(password.encode(), admin_user.password.encode()):
         return {"error": "Falsches Passwort"}
 
+    from core.utilities import calculate_level
     users = db.query(User).all()
     return [
         {
@@ -145,6 +146,7 @@ def admin_get_users(username: str, password: str, db=Depends(get_db)):
             "is_admin": u.is_admin,
             "id_banned": u.id_banned,
             "show_in_leaderboard": u.show_in_leaderboard,
+            "level": calculate_level(u.total_gold_earned or 0),
         }
         for u in users
     ]

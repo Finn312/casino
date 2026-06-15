@@ -5,18 +5,36 @@
     ? 'http://127.0.0.1:8000'
     : 'https://finndev.me';
 
-  const THRESHOLDS  = [0, 500, 2000, 5000, 10000, 20000, 50000, 100000, 250000, 500000, 1000000];
+  const THRESHOLDS = [
+    0, 500, 2000, 5000, 10000, 20000, 50000, 100000, 250000, 500000,
+    1000000, 2500000, 6000000, 15000000, 35000000, 80000000,
+    185000000, 425000000, 975000000, 2250000000, 5000000000,
+    11500000000, 26450000000, 60835000000, 139920500000,
+    321817150000, 740179445000, 1702412723500, 3915549264050,
+    9005763307315, 20713255606825, 47640487895698,
+    109573122160105, 252018180968242, 579641816226957,
+    1333176177322001, 3066305207840602, 7052501978033385,
+    16220754549476786, 37307735463796608, 85807791566732198,
+    197357920603484055, 453923217388013327, 1044023399992430652,
+    2401253819982590500, 5522883785959958150, 12702632707707903745,
+    29216055227728178614, 67196927023774810812,
+    154552932154682064868, 355471743955768749196,
+  ];
   const LEVEL_TABLE = [
-    { level: 1,  gold: 500,     bonus: 250,    feature: 'Dice & Blackjack' },
-    { level: 2,  gold: 2000,    bonus: 1000,   feature: 'Slots + Leaderboard' },
-    { level: 3,  gold: 5000,    bonus: 2500,   feature: 'Autospin + höherer Daily' },
-    { level: 4,  gold: 10000,   bonus: 5000,   feature: 'Chicken Road' },
-    { level: 5,  gold: 20000,   bonus: 10000,  feature: 'Input Bet' },
-    { level: 6,  gold: 50000,   bonus: 25000,  feature: 'Mines' },
-    { level: 7,  gold: 100000,  bonus: 50000,  feature: '—' },
-    { level: 8,  gold: 250000,  bonus: 125000, feature: 'Roulette' },
-    { level: 9,  gold: 500000,  bonus: 250000, feature: 'Poker' },
-    { level: 10, gold: 1000000, bonus: 500000, feature: '🏆 Gold Winner Badge' },
+    { level: 1,  gold: 500,         feature: 'Dice & Blackjack' },
+    { level: 2,  gold: 2000,        feature: 'Slots + Leaderboard' },
+    { level: 3,  gold: 5000,        feature: 'Autospin + höherer Daily' },
+    { level: 4,  gold: 10000,       feature: 'Chicken Road' },
+    { level: 5,  gold: 20000,       feature: 'Input Bet' },
+    { level: 6,  gold: 50000,       feature: 'Mines' },
+    { level: 7,  gold: 100000,      feature: '—' },
+    { level: 8,  gold: 250000,      feature: 'Roulette' },
+    { level: 9,  gold: 500000,      feature: 'Poker' },
+    { level: 10, gold: 1000000,     feature: '🏆 Gold Winner Badge' },
+    ...Array.from({ length: 40 }, (_, i) => {
+      const lv = i + 11;
+      return { level: lv, gold: THRESHOLDS[lv], feature: `+${lv} Buzz Coins` };
+    }),
   ];
 
   // ── CSS ──
@@ -365,7 +383,6 @@
             <th>Status</th>
             <th>Level</th>
             <th>Gold benötigt</th>
-            <th>Bonus Coins</th>
             <th>Feature / Unlock</th>
           </tr>
         </thead>
@@ -384,7 +401,7 @@
     document.getElementById('nv-modal-sub').textContent =
       'Dein aktuelles Level: ' + level + '  |  Gesamt verdient: ' + fmt(totalGold) + ' Gold';
 
-    if (level >= 10) {
+    if (level >= 50) {
       document.getElementById('nv-progress-fill').style.width = '100%';
       document.getElementById('nv-progress-xp').textContent = 'MAX';
     } else {
@@ -407,7 +424,6 @@
         <td>${status}</td>
         <td><strong>${row.level}</strong></td>
         <td>${fmt(row.gold)}</td>
-        <td>${fmt(row.bonus)}</td>
         <td>${row.feature}</td>
       </tr>`;
     }).join('');
