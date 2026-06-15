@@ -49,6 +49,13 @@ class AdminSetCreditsRequest(BaseModel):
     new_balance: int
 
 
+class AdminSetLevelRequest(BaseModel):
+    username: str
+    password: str
+    player_name: str
+    level: int
+
+
 class AdminBanUserRequest(BaseModel):
     username: str
     password: str

@@ -540,6 +540,21 @@
             <div class="action-feedback" id="sc-feedback"></div>
           </div>
 
+          <!-- Level setzen -->
+          <div class="action-panel">
+            <h3>⭐ Level setzen</h3>
+            <div class="form-group" style="margin:0">
+              <label>Spielername</label>
+              <input type="text" id="sl-player" placeholder="Username">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Ziel-Level (0–10)</label>
+              <input type="number" id="sl-level" placeholder="z.B. 6" min="0" max="10">
+            </div>
+            <button class="btn-outline" onclick="setLevel()">Level setzen</button>
+            <div class="action-feedback" id="sl-feedback"></div>
+          </div>
+
           <!-- User bannen -->
           <div class="action-panel">
             <h3>🚫 User bannen</h3>
@@ -758,6 +773,29 @@
         setFeedback("sc-feedback", data.detail || data.error || "Fehler.", false);
       }
     } catch { setFeedback("sc-feedback", "Server nicht erreichbar.", false); }
+    finally { btn.disabled = false; }
+  }
+
+  // ── Set Level ────────────────────────────────────────────────────────────
+
+  async function setLevel() {
+    const player = document.getElementById("sl-player").value.trim();
+    const level = document.getElementById("sl-level").value;
+    if (!player || level === "") { setFeedback("sl-feedback", "Alle Felder ausfüllen.", false); return; }
+    if (parseInt(level) < 0 || parseInt(level) > 10) { setFeedback("sl-feedback", "Level muss 0–10 sein.", false); return; }
+
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    try {
+      const { ok, data } = await adminPost("/admin/set_level", { player_name: player, level: parseInt(level) });
+      if (ok && !data.error) {
+        setFeedback("sl-feedback", `✓ Level für "${player}" auf ${level} gesetzt.`, true);
+        showToast(`${player} ist jetzt Level ${level}.`);
+        loadUsers();
+      } else {
+        setFeedback("sl-feedback", data.detail || data.error || "Fehler.", false);
+      }
+    } catch { setFeedback("sl-feedback", "Server nicht erreichbar.", false); }
     finally { btn.disabled = false; }
   }
 

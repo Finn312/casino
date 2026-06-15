@@ -4,7 +4,7 @@ from database.models import User, game_history, coin_codes
 from database import models
 import bcrypt
 import secrets
-from core.schemas import AdminBanUserRequest, AdminSetCreditsRequest, AdminCreateCodeRequest
+from core.schemas import AdminBanUserRequest, AdminSetCreditsRequest, AdminCreateCodeRequest, AdminSetLevelRequest
 
 router = APIRouter()
 
@@ -31,6 +31,34 @@ def admin_set_credits(request: AdminSetCreditsRequest, db=Depends(get_db)):
         "new_balance": player.balance,
     }
 
+
+
+#Admin Set Level Endpoint
+@router.post("/admin/set_level")
+def admin_set_level(request: AdminSetLevelRequest, db=Depends(get_db)):
+    admin_user = db.query(User).filter(User.username == request.username).first()
+    if not admin_user or not admin_user.is_admin:
+        return {"error": "Unauthorized"}
+    if not bcrypt.checkpw(request.password.encode(), admin_user.password.encode()):
+        return {"error": "Falsches Passwort"}
+
+    if request.level < 0 or request.level > 10:
+        return {"error": "Level muss zwischen 0 und 10 liegen"}
+
+    player = db.query(User).filter(User.username == request.player_name).first()
+    if not player:
+        return {"error": "Player not found"}
+
+    thresholds = [0, 500, 2000, 5000, 10000, 20000, 50000, 100000, 250000, 500000, 1000000]
+    player.total_gold_earned = thresholds[request.level]
+    db.commit()
+
+    return {
+        "message": "Level updated",
+        "player_name": player.username,
+        "new_level": request.level,
+        "total_gold_earned": player.total_gold_earned,
+    }
 
 
 #Admin Ban User Endpoint
